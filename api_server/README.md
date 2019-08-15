@@ -57,3 +57,6 @@ and rich debug information for incoming requests into your console:
 ```bash
 $ adev runserver .
 ``` 
+
+Now go to `/api/v1/docs` in your browser and get the Swagger UI to
+explore this API.
