@@ -16,9 +16,9 @@ setup_routes(app)
 setup_aiohttp_apispec(
     app,
     title="Chat With Anyone API",
-    version="v1",
-    url="/api/v1/docs/swagger.json",
-    swagger_path="/api/v1/docs"
+    version="0.1.0",
+    url="/api/docs/swagger.json",
+    swagger_path="/api/docs"
 )
 
 if __name__ == "__main__":
