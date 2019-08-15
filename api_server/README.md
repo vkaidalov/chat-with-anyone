@@ -50,3 +50,10 @@ Now run the freaking server!
 ```bash
 $ python main.py
 ```
+
+Or use the `aiohttp-devtools` CLI to get such features as live reload
+and rich debug information for incoming requests into your console:
+
+```bash
+$ adev runserver .
+``` 
