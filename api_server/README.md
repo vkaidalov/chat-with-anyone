@@ -32,13 +32,17 @@ $ psql -u postgres -h localhost
 
 Create the database and the user, then quit from the shell:
 
-```
+```sql
 CREATE DATABASE chat_with_anyone;
 CREATE USER chat_with_anyone WITH PASSWORD 'chat_with_anyone';
 GRANT ALL PRIVILEGES ON DATABASE chat_with_anyone to chat_with_anyone;
 \q
 ```
 
+Create new migration
+```bash
+alembic revision -m "<Message for migration>" --autogenerate --head head
+```
 Apply the migrations to fill the database with the needed tables:
 
 ```bash
