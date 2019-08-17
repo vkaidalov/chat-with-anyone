@@ -44,7 +44,5 @@ async def get_user_detail(request):
     user = await User.query.where(User.username == name).gino.first()
     if not user:
         return web.json_response(status=404)
-    return web.json_response({
-        "id": user.id,
-        "username": user.username
-    })
+
+    return web.json_response(UserDetailSchema().dump(user.to_dict()).data)
