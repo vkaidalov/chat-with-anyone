@@ -11,7 +11,9 @@ from alembic import context
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_DIR)
 
-from main import db
+from chat_with_anyone.db import db  # noqa
+import chat_with_anyone.models.user  # noqa
+import chat_with_anyone.models.contact  # noqa
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
