@@ -8,7 +8,7 @@ Create a virtual environment and install the requirements:
 $ cd api_server
 $ python3 -m venv venv
 $ source venv/bin/activate
-$ pip install -r requirements.txt  # (venv) is supposed there and below
+$ pip install -r requirements.txt  # (venv) is supposed here and below
 ```
 
 Install and run PostgreSQL:
@@ -21,13 +21,13 @@ $ sudo service postgresql start
 By default, the `postgres` user has no password. Let's set it:
 
 ```bash
-$ sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
+$ sudo -U postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
 ```
 
 Run the PostgreSQL interactive shell:
 
 ```bash
-$ psql -u postgres -h localhost
+$ psql -U postgres -h localhost
 ```
 
 Create the database and the user, then quit from the shell:
@@ -39,10 +39,6 @@ GRANT ALL PRIVILEGES ON DATABASE chat_with_anyone to chat_with_anyone;
 \q
 ```
 
-Create new migration
-```bash
-alembic revision -m "<Message for migration>" --autogenerate --head head
-```
 Apply the migrations to fill the database with the needed tables:
 
 ```bash
@@ -62,5 +58,13 @@ and rich debug information for incoming requests into your console:
 $ adev runserver .
 ``` 
 
-Now go to `/api/v1/docs` in your browser and get the Swagger UI to
+Now go to `/api/docs` in your browser and get the Swagger UI to
 explore this API.
+
+## Create a migration on DB schema change
+
+Create a new migration file:
+
+```bash
+$ alembic revision -m "<Message for migration>" --autogenerate --head head
+```
