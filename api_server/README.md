@@ -1,6 +1,6 @@
 # Chat With Anyone API Server
 
-## Setup (Ubuntu)
+## Setup without docker (Ubuntu)
 
 Create a virtual environment and install the requirements:
 
@@ -45,7 +45,14 @@ Apply the migrations to fill the database with the needed tables:
 alembic upgrade head
 ```
 
-## Start application
+## Setup with docker
+
+1. Install `docker` and `docker-compose`
+1. Build backend container via `docker-compose build`
+1. Run database container via `docker-compose up -d chat-database`
+1. Apply migrations via `docker-compose run --rm chat-backend alembic upgrade head`
+
+## Start application without docker
 
 Now run the freaking server!
 
@@ -62,6 +69,12 @@ adev runserver .
 
 Now go to `/api/docs` in your browser and get the Swagger UI to
 explore this API.
+
+## Start application with docker
+
+```bash
+docker-compose up
+```
 
 ## Create a migration on DB schema change
 
