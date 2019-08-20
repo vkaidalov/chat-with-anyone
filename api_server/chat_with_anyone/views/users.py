@@ -29,40 +29,121 @@ class ContactResponseSchema(Schema):
     pass
 
 
-class MeDetails(web.View):
-    @docs(tags=['user'], summary='Fetch my profile details')
-    @response_schema(UserResponseSchema(), 200)
-    async def get(self):
-        return web.json_response({})
-
-    @docs(tags=['user'], summary='Edit my profile details')
-    @request_schema(UserRequestSchema(strict=True))
-    @response_schema(UserResponseSchema(), 200)
-    async def patch(self):
-        data = await self.request.json()
-        print('me.patch', data)
-        return web.json_response({})
-
-    @docs(tags=['user'], summary='Delete my profile')
-    async def delete(self):
-        return web.json_response(status=204)
-
-
 class UserDetails(web.View):
-    @docs(tags=['user'], summary='Fetch profile details by id')
+
+    async def _validate_user(self):
+        # for midleware in future ===>
+        token = self.request.headers.get("Authorization")
+        if not token:
+            return web.json_response(
+                {"message": "Authorization token is required."}, status=401
+            )
+
+        user = await User.query.where(User.token == token).gino.first()
+        if not user:
+            return web.json_response(
+                {"message": "Provided token is invalid."}, status=403
+            )
+        # <=== for midleware in future
+        return user
+
+    @docs(
+        tags=['User'],
+        summary='Fetch profile details by id',
+        parameters=[{
+            'in': 'header',
+            'name': 'Authorization',
+            'schema': {'type': 'string'},
+            'required': 'true'
+        }]
+    )
     @response_schema(UserResponseSchema(), 200)
     async def get(self):
-        user_id = self.request.match_info.get('user_id')
-        user = await User.get(int(user_id))
+        user = await UserDetails._validate_user(self)
 
-        if user is None:
+        request_user_id = self.request.match_info.get('user_id')
+        request_user = await User.get(int(request_user_id))
+
+        if request_user is None:
             raise web.HTTPNotFound(
                 body=json.dumps({'message': 'Invalid id'}),
                 content_type='application/json'
             )
 
-        return web.json_response(
-            UserResponseSchema().dump(user.to_dict()).data)
+        if user.id == request_user.id:
+            try:
+                return web.json_response(
+                    UserResponseSchema().dump(request_user.to_dict()).data,
+                    status=200
+                )
+            except Exception as e:
+                print(type(e))
+                print('Something went wrong :(')
+        else:
+            try:
+                return web.json_response( 
+                    UserResponseSchema().dump(request_user.to_dict()).data,
+                    status=200
+                )
+            except Exception as e:
+                print(type(e))
+                print('Something went wrong :(')
+
+
+    @docs(
+        tags=['User'],
+        summary='Edit my profile details',
+        parameters=[{
+            'in': 'header',
+            'name': 'Authorization',
+            'schema': {'type': 'string'},
+            'required': 'true'
+        }]
+    )
+    @request_schema(UserRequestSchema(strict=True))
+    @response_schema(UserResponseSchema(), 200)
+    async def patch(self):
+        user = await UserDetails._validate_user(self)
+        request_user_id = int(self.request.match_info.get('user_id'))
+
+        if user.id != request_user_id:
+            return web.json_response({"message": "Provided token is invalid."}, status=403)
+        
+        else:
+            data = await self.request.json()
+            try:
+                await user.update(
+                    username=data.get('username'),
+                    first_name=data.get('first_name'),
+                    last_name=data.get('last_name')
+                ).apply()
+                return web.json_response({}, status=200)
+            except Exception as e:
+                print(type(e))
+                print('Something went wrong :(')
+
+    @docs(
+        tags=['User'],
+        summary='Delete my profile',
+        parameters=[{
+            'in': 'header',
+            'name': 'Authorization',
+            'schema': {'type': 'string'},
+            'required': 'true'
+        }])
+    async def delete(self):
+        user = await UserDetails._validate_user(self)
+        request_user_id = int(self.request.match_info.get('user_id'))
+
+        if user.id != request_user_id:
+            return web.json_response({"message": "Provided token is invalid."}, status=403)
+        else:
+            try:
+                await user.delete()
+                return web.json_response(status=200)   
+            except Exception as e: 
+                print(type(e))
+                print('Something went wrong :(') 
 
 
 class Contacts(web.View):
