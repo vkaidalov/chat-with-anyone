@@ -1,5 +1,3 @@
-import json
-
 from aiohttp import web
 from aiohttp_apispec import (
     docs, request_schema, response_schema, marshal_with
@@ -54,7 +52,7 @@ class UserDetail(web.View):
     )
     @response_schema(UserResponseSchema())
     async def get(self):
-        # for midleware in future ===>
+        # for middleware in future ===>
         token = self.request.headers.get("Authorization")
         if not token:
             return web.json_response(
@@ -66,7 +64,7 @@ class UserDetail(web.View):
             return web.json_response(
                 {"message": "Provided token is invalid."}, status=403
             )
-        # <=== for midleware in future
+        # <=== for middleware in future
 
         request_user_id = self.request.match_info.get('user_id')
         request_user = await User.get(int(request_user_id))
@@ -92,7 +90,7 @@ class UserDetail(web.View):
     )
     @request_schema(UserRequestSchema(strict=True))
     async def patch(self):
-        # for midleware in future ===>
+        # for middleware in future ===>
         token = self.request.headers.get("Authorization")
         if not token:
             return web.json_response(
@@ -104,7 +102,7 @@ class UserDetail(web.View):
             return web.json_response(
                 {"message": "Provided token is invalid."}, status=403
             )
-        # <=== for midleware in future
+        # <=== for middleware in future
 
         request_user_id = int(self.request.match_info.get('user_id'))
 
@@ -138,7 +136,7 @@ class UserDetail(web.View):
             'required': 'true'
         }])
     async def delete(self):
-        # for midleware in future ===>
+        # for middleware in future ===>
         token = self.request.headers.get("Authorization")
         if not token:
             return web.json_response(
@@ -150,7 +148,7 @@ class UserDetail(web.View):
             return web.json_response(
                 {"message": "Provided token is invalid."}, status=403
             )
-        # <=== for midleware in future
+        # <=== for middleware in future
 
         request_user_id = int(self.request.match_info.get('user_id'))
 
@@ -178,7 +176,7 @@ class ContactList(web.View):
     )
     @request_schema(ContactRequestSchema(strict=True))
     async def post(self):
-        # for midleware in future ===>
+        # for middleware in future ===>
         token = self.request.headers.get("Authorization")
         if not token:
             return web.json_response(
@@ -190,7 +188,7 @@ class ContactList(web.View):
             return web.json_response(
                 {"message": "Provided token is invalid."}, status=403
             )
-        # <=== for midleware in future
+        # <=== for middleware in future
 
         request_user_id = int(self.request.match_info.get('user_id'))
         if user.id != request_user_id:
@@ -223,7 +221,7 @@ class ContactList(web.View):
     )
     @marshal_with(UserResponseSchema(many=True))
     async def get(self):
-        # for midleware in future ===>
+        # for middleware in future ===>
         token = self.request.headers.get("Authorization")
         if not token:
             return web.json_response(
@@ -235,7 +233,7 @@ class ContactList(web.View):
             return web.json_response(
                 {"message": "Provided token is invalid."}, status=403
             )
-        # <=== for midleware in future
+        # <=== for middleware in future
 
         request_user_id = int(self.request.match_info.get('user_id'))
         if user.id != request_user_id:
@@ -274,7 +272,7 @@ class ContactDetail(web.View):
         }]
     )
     async def delete(self):
-        # for midleware in future ===>
+        # for middleware in future ===>
         token = self.request.headers.get("Authorization")
         if not token:
             return web.json_response(
@@ -286,7 +284,7 @@ class ContactDetail(web.View):
             return web.json_response(
                 {"message": "Provided token is invalid."}, status=403
             )
-        # <=== for midleware in future
+        # <=== for middleware in future
 
         request_user_id = int(self.request.match_info.get('user_id'))
         request_contact_id = int(self.request.match_info.get('contact_id'))
