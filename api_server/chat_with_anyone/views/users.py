@@ -1,8 +1,12 @@
 import json
 
 from aiohttp import web
-from aiohttp_apispec import docs, request_schema, response_schema
+from aiohttp_apispec import (
+    docs, request_schema, response_schema, marshal_with
+)
+from asyncpg import ForeignKeyViolationError
 from marshmallow import Schema, fields
+from sqlalchemy import and_
 
 from ..models.user import User
 from ..models.contact import Contact
@@ -22,11 +26,7 @@ class UserResponseSchema(Schema):
 
 
 class ContactRequestSchema(Schema):
-    pass
-
-
-class ContactResponseSchema(Schema):
-    pass
+    contact_id = fields.Int()
 
 
 class MeDetails(web.View):
@@ -65,44 +65,91 @@ class UserDetails(web.View):
             UserResponseSchema().dump(user.to_dict()).data)
 
 
-class Contacts(web.View):
-    @docs(tags=['user'], summary='Create new contact')
+class ContactList(web.View):
+    @docs(
+        tags=['Contacts'],
+        summary='Create a new contact.',
+        parameters=[{
+            'in': 'header',
+            'name': 'Authorization',
+            'schema': {'type': 'string'},
+            'required': 'true'
+        }]
+    )
     @request_schema(ContactRequestSchema(strict=True))
-    @response_schema(ContactResponseSchema(), 200)
     async def post(self):
-        user_id = self.request.match_info.get('user_id')
-        data = await self.request.json()
+        token = self.request.headers.get("Authorization")
+        if not token:
+            return web.json_response(
+                {"message": "Authorization token is required."}, status=401
+            )
 
-        print('contacts.post.data', data)
-        print('contacts.post.user_id', user_id)
+        user = await User.query.where(User.token == token).gino.first()
+        if not user:
+            return web.json_response(
+                {"message": "Provided token is invalid."}, status=403
+            )
+
+        request_user_id = int(self.request.match_info.get('user_id'))
+        if user.id != request_user_id:
+            return web.json_response(
+                {"message": "Posting to other's contact list is forbidden."},
+                status=403
+            )
+
+        try:
+            await Contact.create(
+                owner_id=user.id,
+                contact_id=self.request["data"]["contact_id"]
+            )
+        except ForeignKeyViolationError:
+            return web.json_response(
+                {"message": "Specified 'contact_id' is invalid."}, status=400
+            )
 
         return web.json_response(status=201)
 
-    @docs(tags=['user'], summary='Fetch list of contacts')
-    @response_schema(ContactResponseSchema(), 200)
+    @docs(
+        tags=['Contacts'],
+        summary="Get a list of a user's contacts.",
+        parameters=[{
+            'in': 'header',
+            'name': 'Authorization',
+            'schema': {'type': 'string'},
+            'required': 'true'
+        }]
+    )
+    @marshal_with(UserResponseSchema(many=True))
     async def get(self):
-        user_id = self.request.match_info.get('user_id')
-        query = self.request.query
+        token = self.request.headers.get("Authorization")
+        if not token:
+            return web.json_response(
+                {"message": "Authorization token is required."}, status=401
+            )
 
-        print('contacts.get.query', query)
-        print('contacts.get.user_id', user_id)
+        user = await User.query.where(User.token == token).gino.first()
+        if not user:
+            return web.json_response(
+                {"message": "Provided token is invalid."}, status=403
+            )
 
-        UserContact = User.alias()
+        request_user_id = int(self.request.match_info.get('user_id'))
+        if user.id != request_user_id:
+            return web.json_response(
+                {"message": "Getting other's contact list is forbidden."},
+                status=403
+            )
+
+        user_class_alias = User.alias()
 
         query = User.outerjoin(
             Contact, onclause=(User.id == Contact.owner_id)
         ).outerjoin(
-            UserContact, onclause=(UserContact.id == Contact.contact_id)
-        ).select().where(User.id == int(user_id))
+            user_class_alias, onclause=(user_class_alias.id == Contact.contact_id)
+        ).select().where(User.id == request_user_id)
 
         users = await query.gino.load(
-            User.distinct(User.id).load(add_contact=UserContact)).all()
-
-        if not users:
-            raise web.HTTPNotFound(
-                body=json.dumps({'message': 'Invalid id'}),
-                content_type='application/json'
-            )
+            User.distinct(User.id).load(add_contact=user_class_alias)).all()
 
         return web.json_response(
             UserResponseSchema().dump(
@@ -111,24 +158,43 @@ class Contacts(web.View):
             ).data)
 
 
-class ContactDetails(web.View):
-    @docs(tags=['user'], summary='Delete contact')
+class ContactDetail(web.View):
+    @docs(
+        tags=['Contacts'],
+        summary='Delete the specified contact.',
+        parameters=[{
+            'in': 'header',
+            'name': 'Authorization',
+            'schema': {'type': 'string'},
+            'required': 'true'
+        }]
+    )
     async def delete(self):
-        user_id = self.request.match_info.get('user_id')
-        contact_id = self.request.match_info.get('contact_id')
+        token = self.request.headers.get("Authorization")
+        if not token:
+            return web.json_response(
+                {"message": "Authorization token is required."}, status=401
+            )
 
-        print('contacts.details.delete.contact_id', contact_id)
-        print('contacts.details.delete.user_id', user_id)
+        user = await User.query.where(User.token == token).gino.first()
+        if not user:
+            return web.json_response(
+                {"message": "Provided token is invalid."}, status=403
+            )
+
+        request_user_id = int(self.request.match_info.get('user_id'))
+        request_contact_id = int(self.request.match_info.get('contact_id'))
+        if user.id != request_user_id:
+            return web.json_response(
+                {"message": "Deleting from other's contact list is forbidden."},
+                status=403
+            )
+
+        await Contact.delete.where(
+            and_(
+                Contact.owner_id == request_user_id,
+                Contact.contact_id == request_contact_id
+            )
+        ).gino.status()
 
         return web.json_response(status=204)
-
-    @docs(tags=['user'], summary='Fetch contact details')
-    @response_schema(ContactResponseSchema(), 200)
-    async def get(self):
-        user_id = self.request.match_info.get('user_id')
-        contact_id = self.request.match_info.get('contact_id')
-
-        print('contacts.details.delete.contact_id', contact_id)
-        print('contacts.details.delete.user_id', user_id)
-
-        return web.json_response(status=200)
