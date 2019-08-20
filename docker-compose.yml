@@ -1,0 +1,20 @@
+version: '3'
+services:
+    chat-backend:
+        build: ./api_server
+        ports:
+            - 8000:8000
+        command: adev runserver .
+        volumes:
+            - ./api_server:/usr/src/app
+        depends_on:
+            - chat-database
+        environment:
+            USE_DOCKER: 1
+
+    chat-database:
+        image: postgres:11.5
+        environment:
+            POSTGRES_PASSWORD: chat_with_anyone
+            POSTGRES_USER: chat_with_anyone
+            POSTGRES_DB: chat_with_anyone
