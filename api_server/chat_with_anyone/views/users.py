@@ -6,6 +6,7 @@ from aiohttp_apispec import (
 )
 from asyncpg import ForeignKeyViolationError
 from marshmallow import Schema, fields
+from sqlalchemy import and_
 
 from ..models.user import User
 from ..models.contact import Contact
@@ -158,9 +159,42 @@ class ContactList(web.View):
 
 
 class ContactDetail(web.View):
-    @docs(tags=['Contacts'], summary='Delete the specified contact.')
+    @docs(
+        tags=['Contacts'],
+        summary='Delete the specified contact.',
+        parameters=[{
+            'in': 'header',
+            'name': 'Authorization',
+            'schema': {'type': 'string'},
+            'required': 'true'
+        }]
+    )
     async def delete(self):
-        user_id = self.request.match_info.get('user_id')
-        contact_id = self.request.match_info.get('contact_id')
+        token = self.request.headers.get("Authorization")
+        if not token:
+            return web.json_response(
+                {"message": "Authorization token is required."}, status=401
+            )
+
+        user = await User.query.where(User.token == token).gino.first()
+        if not user:
+            return web.json_response(
+                {"message": "Provided token is invalid."}, status=403
+            )
+
+        request_user_id = int(self.request.match_info.get('user_id'))
+        request_contact_id = int(self.request.match_info.get('contact_id'))
+        if user.id != request_user_id:
+            return web.json_response(
+                {"message": "Deleting from other's contact list is forbidden."},
+                status=403
+            )
+
+        await Contact.delete.where(
+            and_(
+                Contact.owner_id == request_user_id,
+                Contact.contact_id == request_contact_id
+            )
+        ).gino.status()
 
         return web.json_response(status=204)
