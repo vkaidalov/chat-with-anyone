@@ -39,6 +39,7 @@ class AuthResponseSchema(Schema):
     token = fields.Str(
         required=True, validate=validate.Length(equal=40)
     )
+    user_id = fields.Int()
 
 
 @docs(tags=['Auth'], summary='Sign-in and receive a token.')
@@ -59,7 +60,7 @@ async def sign_in(request):
         )
 
     await user.update(token=token_urlsafe(30)).apply()
-    return web.json_response({'token': user.token})
+    return web.json_response({'token': user.token, 'user_id': user.id})
 
 
 @docs(tags=['Auth'], summary='Signup.')
