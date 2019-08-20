@@ -2,7 +2,7 @@ import json
 
 from aiohttp import web
 from aiohttp_apispec import (
-    docs, request_schema, response_schema, use_kwargs
+    docs, request_schema, response_schema, marshal_with
 )
 from asyncpg import ForeignKeyViolationError
 from marshmallow import Schema, fields
@@ -26,10 +26,6 @@ class UserResponseSchema(Schema):
 
 class ContactRequestSchema(Schema):
     contact_id = fields.Int()
-
-
-class ContactResponseSchema(Schema):
-    pass
 
 
 class MeDetails(web.View):
@@ -112,10 +108,37 @@ class ContactList(web.View):
 
         return web.json_response(status=201)
 
-    @docs(tags=['user'], summary='Fetch list of contacts')
-    @response_schema(ContactResponseSchema(), 200)
+    @docs(
+        tags=['Contacts'],
+        summary="Get a list of a user's contacts.",
+        parameters=[{
+            'in': 'header',
+            'name': 'Authorization',
+            'schema': {'type': 'string'},
+            'required': 'true'
+        }]
+    )
+    @marshal_with(UserResponseSchema(many=True))
     async def get(self):
+        token = self.request.headers.get("Authorization")
+        if not token:
+            return web.json_response(
+                {"message": "Authorization token is required."}, status=401
+            )
+
+        user = await User.query.where(User.token == token).gino.first()
+        if not user:
+            return web.json_response(
+                {"message": "Provided token is invalid."}, status=403
+            )
+
         request_user_id = int(self.request.match_info.get('user_id'))
+        if user.id != request_user_id:
+            return web.json_response(
+                {"message": "Getting other's contact list is forbidden."},
+                status=403
+            )
+
         user_class_alias = User.alias()
 
         query = User.outerjoin(
@@ -127,12 +150,6 @@ class ContactList(web.View):
         users = await query.gino.load(
             User.distinct(User.id).load(add_contact=user_class_alias)).all()
 
-        if not users:
-            raise web.HTTPNotFound(
-                body=json.dumps({'message': 'Invalid id'}),
-                content_type='application/json'
-            )
-
         return web.json_response(
             UserResponseSchema().dump(
                 [contact.to_dict() for contact in users[0].contacts],
@@ -141,17 +158,9 @@ class ContactList(web.View):
 
 
 class ContactDetail(web.View):
-    @docs(tags=['user'], summary='Delete contact')
+    @docs(tags=['Contacts'], summary='Delete the specified contact.')
     async def delete(self):
         user_id = self.request.match_info.get('user_id')
         contact_id = self.request.match_info.get('contact_id')
 
         return web.json_response(status=204)
-
-    @docs(tags=['user'], summary='Fetch contact details')
-    @response_schema(ContactResponseSchema(), 200)
-    async def get(self):
-        user_id = self.request.match_info.get('user_id')
-        contact_id = self.request.match_info.get('contact_id')
-
-        return web.json_response(status=200)
