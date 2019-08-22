@@ -71,7 +71,7 @@ async def sign_up(request):
     return web.json_response(status=201)
 
 
-@docs(tags=['Auth'], summary='Sign-in and receive a token.')
+@docs(tags=['Auth'], summary='Sign-in and receive a token and user_id.')
 @request_schema(SigninRequestSchema(strict=True))
 @response_schema(AuthResponseSchema(strict=True))
 async def sign_in(request):
@@ -92,6 +92,15 @@ async def sign_in(request):
     return web.json_response({'token': user.token, 'user_id': user.id})
 
 
+@docs(
+    tags=['Auth'],
+    summary='Sign-out.',
+    parameters=[{
+        'in': 'header',
+        'name': 'Authorization',
+        'schema': {'type': 'string'},
+        'required': 'true'
+    }])
 async def sign_out(request):
     # for middleware in future ===>
     token = request.headers.get("Authorization")
