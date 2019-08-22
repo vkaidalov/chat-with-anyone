@@ -4,7 +4,6 @@ from aiohttp import web
 from aiohttp_apispec import docs, request_schema, response_schema
 from asyncpg import UniqueViolationError
 from marshmallow import Schema, fields, validate
-from passlib.hash import bcrypt
 
 from ..models.user import User
 
@@ -43,27 +42,6 @@ class AuthResponseSchema(Schema):
     user_id = fields.Int()
 
 
-@docs(tags=['Auth'], summary='Sign-in and receive a token.')
-@request_schema(SigninRequestSchema(strict=True))
-@response_schema(AuthResponseSchema(strict=True))
-async def sign_in(request):
-    """
-    Signs user in if email exists and password is valid.
-    :param request: content of the page to take json.
-    :return: response in json representation.
-    """
-    data = await request.json()
-    user = await User.query.where(User.email == data['email']).gino.first()
-
-    if not user or not bcrypt.verify(data['password'], user.password):
-        return web.json_response(
-            {'message': 'Invalid credentials.'}, status=400
-        )
-
-    await user.update(token=token_urlsafe(30)).apply()
-    return web.json_response({'token': user.token, 'user_id': user.id})
-
-
 @docs(tags=['Auth'], summary='Signup.')
 @request_schema(SignupRequestSchema(strict=True))
 async def signup(request):
@@ -78,7 +56,7 @@ async def signup(request):
         await User.create(
             username=data['username'],
             email=data['email'],
-            password=bcrypt.hash(data['password']),
+            password=data['password'],
             first_name=data.get('first_name'),
             last_name=data.get('last_name'),
             token=token_urlsafe(30)
@@ -90,3 +68,53 @@ async def signup(request):
         )
 
     return web.json_response(status=201)
+
+
+@docs(tags=['Auth'], summary='Sign-in and receive a token and user_id.')
+@request_schema(SigninRequestSchema(strict=True))
+@response_schema(AuthResponseSchema(strict=True))
+async def sign_in(request):
+    """
+    Signs user in if email exists and password is valid.
+    :param request: content of the page to take json.
+    :return: response in json representation.
+    """
+    data = await request.json()
+    user = await User.query.where(User.email == data['email']).gino.first()
+
+    if not user or user.password != data['password']:
+        return web.json_response(
+            {'message': 'Invalid credentials.'}, status=400
+        )
+
+    await user.update(token=token_urlsafe(30)).apply()
+    return web.json_response({'token': user.token, 'user_id': user.id})
+
+
+@docs(
+    tags=['Auth'],
+    summary='Sign-out.',
+    parameters=[{
+        'in': 'header',
+        'name': 'Authorization',
+        'schema': {'type': 'string'},
+        'required': 'true'
+    }])
+async def sign_out(request):
+    # for middleware in future ===>
+    token = request.headers.get("Authorization")
+    if not token:
+        return web.json_response(
+            {"message": "Authorization token is required."}, status=401
+        )
+
+    user = await User.query.where(User.token == token).gino.first()
+    if not user:
+        return web.json_response(
+            {"message": "Provided token is invalid."}, status=403
+        )
+    # <=== for middleware in future
+    request_user_id = int(request.match_info.get('user_id'))
+    if user.id == request_user_id:
+        await user.update(token=token_urlsafe(30)).apply()
+        return web.json_response(status=200)
