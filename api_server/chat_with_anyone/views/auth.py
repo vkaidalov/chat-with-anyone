@@ -4,6 +4,7 @@ from aiohttp import web
 from aiohttp_apispec import docs, request_schema, response_schema
 from asyncpg import UniqueViolationError
 from marshmallow import Schema, fields, validate
+from passlib.hash import bcrypt
 
 from ..models.user import User
 
@@ -54,7 +55,7 @@ async def sign_in(request):
     data = await request.json()
     user = await User.query.where(User.email == data['email']).gino.first()
 
-    if not user or user.password != data['password']:
+    if not user or not bcrypt.verify(data['password'], user.password):
         return web.json_response(
             {'message': 'Invalid credentials.'}, status=400
         )
@@ -77,7 +78,7 @@ async def signup(request):
         await User.create(
             username=data['username'],
             email=data['email'],
-            password=data['password'],
+            password=bcrypt.hash(data['password']),
             first_name=data.get('first_name'),
             last_name=data.get('last_name'),
             token=token_urlsafe(30)
