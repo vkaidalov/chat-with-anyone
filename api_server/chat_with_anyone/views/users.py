@@ -39,6 +39,19 @@ class ContactRequestSchema(Schema):
     contact_id = fields.Int()
 
 
+class UserListResponseSchema(Schema):
+    id = fields.Int()
+    username = fields.Str(
+        validate=validate.Length(max=40), required=True
+    )
+    first_name = fields.Str(
+        validate=validate.Length(max=30)
+    )
+    last_name = fields.Str(
+        validate=validate.Length(max=150)
+    )
+
+
 class UserDetail(web.View):
     @docs(
         tags=['User'],
@@ -302,3 +315,82 @@ class ContactDetail(web.View):
         ).gino.status()
 
         return web.json_response(status=204)
+
+
+class UserList(web.View):
+    @docs(
+        tags=['User'],
+        summary="Return all users.",
+        parameters=[{
+            'in': 'header',
+            'name': 'Authorization',
+            'schema': {'type': 'string'},
+            'required': 'true'
+        },
+        {
+            'in': 'query',
+            'name': 'username',
+            'schema': {'type': 'string'},
+        },
+        {
+            'in': 'query',
+            'name': 'first_name',
+            'schema': {'type': 'string'},
+        },{
+            'in': 'query',
+            'name': 'last_name',
+            'schema': {'type': 'string'},
+        }]
+    )
+    @marshal_with(UserResponseSchema(many=True))
+    async def get(self):
+        # for middleware in future ===>
+        # token = self.request.headers.get("Authorization")
+        # if not token:
+        #     return web.json_response(
+        #         {"message": "Authorization token is required."}, status=401
+        #     )
+
+        # user = await User.query.where(User.token == token).gino.first()
+        # if not user:
+        #     return web.json_response(
+        #         {"message": "Provided token is invalid."}, status=403
+        #     )
+        # <=== for middleware in future
+        valid_query_params = {'username': User.username,
+                              'first_name':User.first_name,
+                              'last_name': User.last_name}
+        query = self.request.query
+        f = lambda param: True if param not in valid_query_params else False
+
+        not_valid_query = all(map(f, query))
+
+        if not query or not_valid_query:
+            users = await User.query.gino.all()
+
+            return web.json_response(
+            UserListResponseSchema().dump(
+                [user.to_dict() for user in users],
+                many=True
+            ).data)
+
+        # if query exist
+        results = {}
+        for param in query:
+            if param not in valid_query_params:
+                continue
+
+            result = await User.query.where(valid_query_params[param].startswith(query[param])).gino.all()
+            
+            # надеюсь понятный костыль
+            # сделать через set() не получилось,
+            # ибо корутины -- каждыйй генератор до выполнения является уникальным
+            # даже если результат его выполнения -- это один и тот же объект
+            if result:
+                [results.update({user.id: user}) for user in result if user.id not in results]
+
+        return web.json_response(
+        UserListResponseSchema().dump(
+            [user.to_dict() for user in results.values()],
+            many=True
+        ).data)
