@@ -340,57 +340,57 @@ class UserList(web.View):
             'in': 'query',
             'name': 'last_name',
             'schema': {'type': 'string'},
+        },
+        {
+            'in': 'query',
+            'name': 'page',
+            'schema': {'type': 'integer'},
+        },
+        {
+            'in': 'query',
+            'name': 'page_size',
+            'schema': {'type': 'integer'},
         }]
     )
     @marshal_with(UserResponseSchema(many=True))
     async def get(self):
         # for middleware in future ===>
-        # token = self.request.headers.get("Authorization")
-        # if not token:
-        #     return web.json_response(
-        #         {"message": "Authorization token is required."}, status=401
-        #     )
-
-        # user = await User.query.where(User.token == token).gino.first()
-        # if not user:
-        #     return web.json_response(
-        #         {"message": "Provided token is invalid."}, status=403
-        #     )
-        # <=== for middleware in future
-        valid_query_params = {'username': User.username,
-                              'first_name':User.first_name,
-                              'last_name': User.last_name}
-        query = self.request.query
-        f = lambda param: True if param not in valid_query_params else False
-
-        not_valid_query = all(map(f, query))
-
-        if not query or not_valid_query:
-            users = await User.query.gino.all()
-
+        token = self.request.headers.get("Authorization")
+        if not token:
             return web.json_response(
-            UserListResponseSchema().dump(
-                [user.to_dict() for user in users],
-                many=True
-            ).data)
+                {"message": "Authorization token is required."}, status=401
+            )
 
-        # if query exist
-        results = {}
-        for param in query:
-            if param not in valid_query_params:
-                continue
+        user = await User.query.where(User.token == token).gino.first()
+        if not user:
+            return web.json_response(
+                {"message": "Provided token is invalid."}, status=403
+            )
+        # <=== for middleware in future
+        query = self.request.query
+        
+        page = int(query.get('page', 1))
+        page_size = int(query.get('page_size', 5))
 
-            result = await User.query.where(valid_query_params[param].startswith(query[param])).gino.all()
-            
-            # надеюсь понятный костыль
-            # сделать через set() не получилось,
-            # ибо корутины -- каждыйй генератор до выполнения является уникальным
-            # даже если результат его выполнения -- это один и тот же объект
-            if result:
-                [results.update({user.id: user}) for user in result if user.id not in results]
+        condition = []
+
+        username = query.get('username')
+        first_name = query.get('first_name')
+        last_name = query.get('last_name')
+
+        if username:
+            condition.append(User.username.ilike(f'%{username}%'))
+        if first_name:
+            condition.append(User.first_name.ilike(f'%{first_name}%'))
+        if last_name:
+            condition.append(User.last_name.ilike(f'%{last_name}%'))
+
+        users = await User.query.where(and_(*condition))\
+            .limit(page_size).offset(page*page_size - page_size)\
+            .gino.all()
 
         return web.json_response(
         UserListResponseSchema().dump(
-            [user.to_dict() for user in results.values()],
+            [user.to_dict() for user in users],
             many=True
         ).data)
