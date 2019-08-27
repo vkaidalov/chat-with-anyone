@@ -103,19 +103,7 @@ async def sign_in(request):
         'required': 'true'
     }])
 async def sign_out(request):
-    # for middleware in future ===>
-    token = request.headers.get("Authorization")
-    if not token:
-        return web.json_response(
-            {"message": "Authorization token is required."}, status=401
-        )
-
-    user = await User.query.where(User.token == token).gino.first()
-    if not user:
-        return web.json_response(
-            {"message": "Provided token is invalid."}, status=403
-        )
-    # <=== for middleware in future
+    user = request["user"]
     request_user_id = int(request.match_info.get('user_id'))
     if user.id != request_user_id:
         return web.json_response(
