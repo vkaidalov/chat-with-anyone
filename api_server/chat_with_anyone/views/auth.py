@@ -122,5 +122,5 @@ async def sign_out(request):
         return web.json_response(status=200)
     else:
         return web.json_response(
-            {'message': 'Invalid credentials'}, status=400
+            {'message': 'Invalid credentials'}, status=403
         )
