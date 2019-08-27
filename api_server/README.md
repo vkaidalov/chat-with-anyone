@@ -89,3 +89,9 @@ Create a new migration file:
 ```bash
 alembic revision -m "<Message for migration>" --autogenerate --head head
 ```
+
+## Running tests
+
+```bash
+pytest
+```
