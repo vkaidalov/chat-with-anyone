@@ -7,10 +7,11 @@ from marshmallow import Schema, fields, validate
 from passlib.hash import bcrypt
 
 from ..models.user import User
+from .email_confirmation import send_email
 
 
 class SigninRequestSchema(Schema):
-    email = fields.Str(
+    email = fields.Email(
         validate=validate.Length(max=255), required=True
     )
     password = fields.Str(
@@ -22,7 +23,7 @@ class SignupRequestSchema(Schema):
     username = fields.Str(
         validate=validate.Length(max=40), required=True
     )
-    email = fields.Str(
+    email = fields.Email(
         validate=validate.Length(max=255), required=True
     )
     password = fields.Str(
@@ -74,6 +75,8 @@ async def signup(request):
     """
     data = await request.json()
 
+    email_token = token_urlsafe(30)
+
     try:
         await User.create(
             username=data['username'],
@@ -81,7 +84,7 @@ async def signup(request):
             password=bcrypt.hash(data['password']),
             first_name=data.get('first_name'),
             last_name=data.get('last_name'),
-            token=token_urlsafe(30)
+            token=email_token
         )
     except UniqueViolationError as e:
         return web.json_response(
@@ -89,4 +92,23 @@ async def signup(request):
             status=400
         )
 
+    try:
+        await send_email(receiver_email=data['email'], email_token=email_token)
+    except AttributeError:
+        await User.delete.where(User.email == data['email']).gino.status()
+
+        return web.json_response(
+            {'message': 'Invalid e-mail adress'},
+            status=400
+        )
+    except ConnectionRefusedError:
+        await User.delete.where(User.email == data['email']).gino.status()
+
+        return web.json_response(
+            {'message': 'Connection failed'},
+            status=500
+        )
+
+        
+    # return HTML-page in future
     return web.json_response(status=201)
