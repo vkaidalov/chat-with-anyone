@@ -6,7 +6,7 @@ from .models.user import User
 
 @web.middleware
 async def authorization(request, handler):
-    for r in ['/api/docs', '/api/sign']:
+    for r in ['/api/docs', '/api/sign', '/api/email']:
         if request.path.startswith(r):
             return await handler(request)
 
@@ -21,7 +21,7 @@ async def authorization(request, handler):
         return web.json_response(
             {"message": "Provided token is invalid."}, status=403
         )
-    
+
     if not user.is_active:
         return web.json_response(
             {"message": "User is not active."}, status=403
