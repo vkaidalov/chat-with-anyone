@@ -83,7 +83,8 @@ async def sign_in(request):
     data = await request.json()
     user = await User.query.where(User.email == data['email']).gino.first()
 
-    if not user or not bcrypt.verify(data['password'], user.password):
+    if not user or not user.is_active or not bcrypt.verify(data['password'],
+                                                           user.password):
         return web.json_response(
             {'message': 'Invalid credentials.'}, status=400
         )
