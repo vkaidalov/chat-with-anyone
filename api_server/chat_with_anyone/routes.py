@@ -9,7 +9,7 @@ def setup_routes(app):
     app.add_routes([
         web.post('/api/signup', sign_up),
         web.post('/api/sign-in', sign_in),
-        web.post('/api/users/{user_id}/sign-out', sign_out),
+        web.post(r'/api/users/{user_id:\d+}/sign-out', sign_out),
 
         web.view(r'/api/users/{user_id:\d+}/contacts/', ContactList),
         web.view(
