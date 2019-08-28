@@ -52,6 +52,82 @@ class UserListResponseSchema(Schema):
     )
 
 
+class UserList(web.View):
+    @docs(
+        tags=['User'],
+        summary="Return all users.",
+        parameters=[
+            {
+                'in': 'header',
+                'name': 'Authorization',
+                'schema': {'type': 'string'},
+                'required': 'true'
+            },
+            {
+                'in': 'query',
+                'name': 'username',
+                'schema': {'type': 'string'},
+            },
+            {
+                'in': 'query',
+                'name': 'first_name',
+                'schema': {'type': 'string'},
+            },
+            {
+                'in': 'query',
+                'name': 'last_name',
+                'schema': {'type': 'string'},
+            },
+            {
+                'in': 'query',
+                'name': 'page',
+                'schema': {'type': 'integer'},
+            },
+            {
+                'in': 'query',
+                'name': 'page_size',
+                'schema': {'type': 'integer'},
+            }
+        ]
+    )
+    @marshal_with(UserResponseSchema(many=True))
+    async def get(self):
+        query = self.request.query
+
+        try:
+            page = int(query.get('page', 1))
+            page_size = int(query.get('page_size', 10))
+        except ValueError:
+            page = 1
+            page_size = 10
+
+        # one page pagination limit
+        if page_size > 50:
+            page_size = 50
+
+        username = query.get('username')
+        first_name = query.get('first_name')
+        last_name = query.get('last_name')
+
+        condition = []
+
+        if username:
+            condition.append(User.username.ilike(f'%{username}%'))
+        if first_name:
+            condition.append(User.first_name.ilike(f'%{first_name}%'))
+        if last_name:
+            condition.append(User.last_name.ilike(f'%{last_name}%'))
+
+        users = await User.query.where(and_(*condition))\
+            .limit(page_size).offset(page*page_size - page_size).gino.all()
+
+        return web.json_response(
+            UserListResponseSchema().dump(
+                [user.to_dict() for user in users],
+                many=True
+            ).data)
+
+
 class UserDetail(web.View):
     @docs(
         tags=['User'],
@@ -123,7 +199,7 @@ class UserDetail(web.View):
             return web.json_response(
                 {"message": "Patching other's profile is forbidden."}, status=403
             )
-        
+
         data = await self.request.json()
         try:
             await user.update(
@@ -136,7 +212,7 @@ class UserDetail(web.View):
                 {'message': e.as_dict()['detail']},
                 status=400
             )
-        
+
         return web.json_response(status=204)
 
     @docs(
@@ -170,9 +246,9 @@ class UserDetail(web.View):
                 {"message": "Deleting other's profile is forbidden."},
                 status=403
             )
-        
+
         await user.delete()
-        
+
         return web.json_response(status=204)
 
 
@@ -260,7 +336,8 @@ class ContactList(web.View):
         query = User.outerjoin(
             Contact, onclause=(User.id == Contact.owner_id)
         ).outerjoin(
-            user_class_alias, onclause=(user_class_alias.id == Contact.contact_id)
+            user_class_alias, onclause=(
+                user_class_alias.id == Contact.contact_id)
         ).select().where(User.id == request_user_id)
 
         users = await query.gino.load(
@@ -315,82 +392,3 @@ class ContactDetail(web.View):
         ).gino.status()
 
         return web.json_response(status=204)
-
-
-class UserList(web.View):
-    @docs(
-        tags=['User'],
-        summary="Return all users.",
-        parameters=[{
-            'in': 'header',
-            'name': 'Authorization',
-            'schema': {'type': 'string'},
-            'required': 'true'
-        },
-        {
-            'in': 'query',
-            'name': 'username',
-            'schema': {'type': 'string'},
-        },
-        {
-            'in': 'query',
-            'name': 'first_name',
-            'schema': {'type': 'string'},
-        },{
-            'in': 'query',
-            'name': 'last_name',
-            'schema': {'type': 'string'},
-        },
-        {
-            'in': 'query',
-            'name': 'page',
-            'schema': {'type': 'integer'},
-        },
-        {
-            'in': 'query',
-            'name': 'page_size',
-            'schema': {'type': 'integer'},
-        }]
-    )
-    @marshal_with(UserResponseSchema(many=True))
-    async def get(self):
-        # for middleware in future ===>
-        token = self.request.headers.get("Authorization")
-        if not token:
-            return web.json_response(
-                {"message": "Authorization token is required."}, status=401
-            )
-
-        user = await User.query.where(User.token == token).gino.first()
-        if not user:
-            return web.json_response(
-                {"message": "Provided token is invalid."}, status=403
-            )
-        # <=== for middleware in future
-        query = self.request.query
-        
-        page = int(query.get('page', 1))
-        page_size = int(query.get('page_size', 5))
-
-        condition = []
-
-        username = query.get('username')
-        first_name = query.get('first_name')
-        last_name = query.get('last_name')
-
-        if username:
-            condition.append(User.username.ilike(f'%{username}%'))
-        if first_name:
-            condition.append(User.first_name.ilike(f'%{first_name}%'))
-        if last_name:
-            condition.append(User.last_name.ilike(f'%{last_name}%'))
-
-        users = await User.query.where(and_(*condition))\
-            .limit(page_size).offset(page*page_size - page_size)\
-            .gino.all()
-
-        return web.json_response(
-        UserListResponseSchema().dump(
-            [user.to_dict() for user in users],
-            many=True
-        ).data)
