@@ -92,6 +92,11 @@ class UserList(web.View):
     )
     @marshal_with(UserResponseSchema(many=True))
     async def get(self):
+        if not self.request["user"]:
+            return web.json_response(
+                {"message": "Authorization token is required."}, status=401
+            )
+
         query = self.request.query
 
         try:
