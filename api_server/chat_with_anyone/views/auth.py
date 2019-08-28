@@ -77,7 +77,7 @@ async def sign_up(request):
         await User.delete.where(User.email == data['email']).gino.status()
 
         return web.json_response(
-            {'message': 'Invalid e-mail adress'},
+            {'message': 'Invalid e-mail address'},
             status=400
         )
     except ConnectionRefusedError:

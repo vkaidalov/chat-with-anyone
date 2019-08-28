@@ -1,8 +1,8 @@
-import smtplib, ssl
+import smtplib
+import ssl
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.message import Message
 
 
 async def send_email(receiver_email, email_token):
@@ -37,10 +37,10 @@ async def send_email(receiver_email, email_token):
 
     with smtplib.SMTP_SSL(
         'smtp.gmail.com', 465, context=context
-        ) as smtp_server:
+    ) as smtp_server:
 
         smtp_server.login(sender_email, password)
-        
+
         smtp_server.sendmail(
             sender_email, receiver_email, msg.as_string()
         )
