@@ -12,7 +12,9 @@ def setup_routes(app):
         web.post('/api/sign-in', sign_in),
         web.post(r'/api/users/{user_id:\d+}/sign-out', sign_out),
 
-        web.get(r'/api/email-confirmation/{token}', email_token_confirmation),
+        web.get(r'/api/email-confirmation/{token}', email_token_confirmation,
+                allow_head=False
+                ),
 
         web.view(r'/api/users/{user_id:\d+}/contacts/', ContactList),
         web.view(
