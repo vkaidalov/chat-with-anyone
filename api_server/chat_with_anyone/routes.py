@@ -3,7 +3,7 @@ from aiohttp import web
 from .views.auth import sign_in, sign_up, sign_out
 from .views.chats import Chats, ChatMessages, ChatMessageDetails
 from .views.users import UserDetail, ContactDetail, ContactList
-from .views.email_confirmation import set_active, send_email
+from .views.email_confirmation import email_token_confirmation
 
 
 def setup_routes(app):
@@ -12,7 +12,7 @@ def setup_routes(app):
         web.post('/api/sign-in', sign_in),
         web.post(r'/api/users/{user_id:\d+}/sign-out', sign_out),
 
-        web.get(r'/api/email-confirmation/{token}', set_active),
+        web.get(r'/api/email-confirmation/{token}', email_token_confirmation),
 
         web.view(r'/api/users/{user_id:\d+}/contacts/', ContactList),
         web.view(
@@ -28,5 +28,4 @@ def setup_routes(app):
             r'/api/chats/{chat_id:\d+}/messages/{message_id:\d+}',
             ChatMessageDetails
         ),
-        
     ])

@@ -7,7 +7,7 @@ from marshmallow import Schema, fields, validate
 from passlib.hash import bcrypt
 
 from ..models.user import User
-from .email_confirmation import send_email
+from ..utils import send_email
 
 
 class SigninRequestSchema(Schema):
@@ -88,8 +88,6 @@ async def sign_up(request):
             status=500
         )
 
-        
-    # return HTML-page in future
     return web.json_response(status=201)
 
 
