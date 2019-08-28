@@ -52,19 +52,10 @@ class UserDetail(web.View):
     )
     @response_schema(UserResponseSchema())
     async def get(self):
-        # for middleware in future ===>
-        token = self.request.headers.get("Authorization")
-        if not token:
+        if not self.request["user"]:
             return web.json_response(
                 {"message": "Authorization token is required."}, status=401
             )
-
-        user = await User.query.where(User.token == token).gino.first()
-        if not user:
-            return web.json_response(
-                {"message": "Provided token is invalid."}, status=403
-            )
-        # <=== for middleware in future
 
         request_user_id = self.request.match_info.get('user_id')
         request_user = await User.get(int(request_user_id))
@@ -90,27 +81,18 @@ class UserDetail(web.View):
     )
     @request_schema(UserRequestSchema(strict=True))
     async def patch(self):
-        # for middleware in future ===>
-        token = self.request.headers.get("Authorization")
-        if not token:
+        if self.request["user"]:
+            user = self.request["user"]
+        else:
             return web.json_response(
                 {"message": "Authorization token is required."}, status=401
             )
-
-        user = await User.query.where(User.token == token).gino.first()
-        if not user:
-            return web.json_response(
-                {"message": "Provided token is invalid."}, status=403
-            )
-        # <=== for middleware in future
-
         request_user_id = int(self.request.match_info.get('user_id'))
-
         if user.id != request_user_id:
             return web.json_response(
                 {"message": "Patching other's profile is forbidden."}, status=403
             )
-        
+
         data = await self.request.json()
         try:
             await user.update(
@@ -136,22 +118,13 @@ class UserDetail(web.View):
             'required': 'true'
         }])
     async def delete(self):
-        # for middleware in future ===>
-        token = self.request.headers.get("Authorization")
-        if not token:
+        if self.request["user"]:
+            user = self.request["user"]
+        else:
             return web.json_response(
                 {"message": "Authorization token is required."}, status=401
             )
-
-        user = await User.query.where(User.token == token).gino.first()
-        if not user:
-            return web.json_response(
-                {"message": "Provided token is invalid."}, status=403
-            )
-        # <=== for middleware in future
-
         request_user_id = int(self.request.match_info.get('user_id'))
-
         if user.id != request_user_id:
             return web.json_response(
                 {"message": "Deleting other's profile is forbidden."},
@@ -176,20 +149,12 @@ class ContactList(web.View):
     )
     @request_schema(ContactRequestSchema(strict=True))
     async def post(self):
-        # for middleware in future ===>
-        token = self.request.headers.get("Authorization")
-        if not token:
+        if self.request["user"]:
+            user = self.request["user"]
+        else:
             return web.json_response(
                 {"message": "Authorization token is required."}, status=401
             )
-
-        user = await User.query.where(User.token == token).gino.first()
-        if not user:
-            return web.json_response(
-                {"message": "Provided token is invalid."}, status=403
-            )
-        # <=== for middleware in future
-
         request_user_id = int(self.request.match_info.get('user_id'))
         if user.id != request_user_id:
             return web.json_response(
@@ -221,20 +186,12 @@ class ContactList(web.View):
     )
     @marshal_with(UserResponseSchema(many=True))
     async def get(self):
-        # for middleware in future ===>
-        token = self.request.headers.get("Authorization")
-        if not token:
+        if self.request["user"]:
+            user = self.request["user"]
+        else:
             return web.json_response(
                 {"message": "Authorization token is required."}, status=401
             )
-
-        user = await User.query.where(User.token == token).gino.first()
-        if not user:
-            return web.json_response(
-                {"message": "Provided token is invalid."}, status=403
-            )
-        # <=== for middleware in future
-
         request_user_id = int(self.request.match_info.get('user_id'))
         if user.id != request_user_id:
             return web.json_response(
@@ -272,20 +229,12 @@ class ContactDetail(web.View):
         }]
     )
     async def delete(self):
-        # for middleware in future ===>
-        token = self.request.headers.get("Authorization")
-        if not token:
+        if self.request["user"]:
+            user = self.request["user"]
+        else:
             return web.json_response(
                 {"message": "Authorization token is required."}, status=401
             )
-
-        user = await User.query.where(User.token == token).gino.first()
-        if not user:
-            return web.json_response(
-                {"message": "Provided token is invalid."}, status=403
-            )
-        # <=== for middleware in future
-
         request_user_id = int(self.request.match_info.get('user_id'))
         request_contact_id = int(self.request.match_info.get('contact_id'))
         if user.id != request_user_id:
