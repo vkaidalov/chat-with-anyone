@@ -8,14 +8,14 @@ from .models.user import User
 async def authorization(request, handler):
     token = request.headers.get("Authorization")
     if not token:
-        request.user = None
+        request["user"] = None
     else:
         user = await User.query.where(User.token == token).gino.first()
         if not user:
             return web.json_response(
                 {"message": "Provided token is invalid."}, status=403
             )
-        request.user = user
+        request["user"] = user
 
     return await handler(request)
 

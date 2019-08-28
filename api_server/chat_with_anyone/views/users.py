@@ -52,6 +52,11 @@ class UserDetail(web.View):
     )
     @response_schema(UserResponseSchema())
     async def get(self):
+        if not self.request["user"]:
+            return web.json_response(
+                {"message": "Authorization token is required."}, status=401
+            )
+
         request_user_id = self.request.match_info.get('user_id')
         request_user = await User.get(int(request_user_id))
 
@@ -76,8 +81,8 @@ class UserDetail(web.View):
     )
     @request_schema(UserRequestSchema(strict=True))
     async def patch(self):
-        if self.request.user:
-            user = self.request.user
+        if self.request["user"]:
+            user = self.request["user"]
         else:
             return web.json_response(
                 {"message": "Authorization token is required."}, status=401
@@ -113,8 +118,8 @@ class UserDetail(web.View):
             'required': 'true'
         }])
     async def delete(self):
-        if self.request.user:
-            user = self.request.user
+        if self.request["user"]:
+            user = self.request["user"]
         else:
             return web.json_response(
                 {"message": "Authorization token is required."}, status=401
@@ -144,8 +149,8 @@ class ContactList(web.View):
     )
     @request_schema(ContactRequestSchema(strict=True))
     async def post(self):
-        if self.request.user:
-            user = self.request.user
+        if self.request["user"]:
+            user = self.request["user"]
         else:
             return web.json_response(
                 {"message": "Authorization token is required."}, status=401
@@ -181,8 +186,8 @@ class ContactList(web.View):
     )
     @marshal_with(UserResponseSchema(many=True))
     async def get(self):
-        if self.request.user:
-            user = self.request.user
+        if self.request["user"]:
+            user = self.request["user"]
         else:
             return web.json_response(
                 {"message": "Authorization token is required."}, status=401
@@ -224,8 +229,8 @@ class ContactDetail(web.View):
         }]
     )
     async def delete(self):
-        if self.request.user:
-            user = self.request.user
+        if self.request["user"]:
+            user = self.request["user"]
         else:
             return web.json_response(
                 {"message": "Authorization token is required."}, status=401

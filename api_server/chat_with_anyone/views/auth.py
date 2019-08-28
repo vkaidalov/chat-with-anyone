@@ -103,8 +103,8 @@ async def sign_in(request):
         'required': 'true'
     }])
 async def sign_out(request):
-    if request.user:
-        user = request.user
+    if request["user"]:
+        user = request["user"]
     else:
         return web.json_response(
             {"message": "Authorization token is required."}, status=401
