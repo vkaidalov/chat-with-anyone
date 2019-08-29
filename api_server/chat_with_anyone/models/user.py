@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from chat_with_anyone.db import db
 
 
@@ -10,7 +12,7 @@ class User(db.Model):
     username = db.Column(db.String(length=40), unique=True, nullable=False)
     email = db.Column(db.String(length=255), unique=True, nullable=False)
     password = db.Column(db.String(length=255), nullable=False)
-    created_at = db.Column(db.DateTime(), server_default='NOW()')
+    created_at = db.Column(db.DateTime(), default=datetime.utcnow)
     is_active = db.Column(db.Boolean(), nullable=False, server_default='FALSE')
     token = db.Column(db.String(length=40), nullable=False, unique=True)
 
