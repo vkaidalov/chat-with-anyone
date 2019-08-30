@@ -105,7 +105,7 @@ class UserDetail(web.View):
                 {'message': e.as_dict()['detail']},
                 status=400
             )
-        
+
         return web.json_response(status=204)
 
     @docs(
@@ -130,9 +130,9 @@ class UserDetail(web.View):
                 {"message": "Deleting other's profile is forbidden."},
                 status=403
             )
-        
+
         await user.delete()
-        
+
         return web.json_response(status=204)
 
 
@@ -170,6 +170,10 @@ class ContactList(web.View):
         except ForeignKeyViolationError:
             return web.json_response(
                 {"message": "Specified 'contact_id' is invalid."}, status=400
+            )
+        except UniqueViolationError:
+            return web.json_response(
+                {"message": "'contact_id' already exists"}, status=400
             )
 
         return web.json_response(status=201)
