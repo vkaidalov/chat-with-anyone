@@ -2,7 +2,7 @@ from aiohttp import web
 
 from .views.auth import sign_in, sign_up, sign_out
 from .views.chats import Chats, ChatMessages, ChatMessageDetails
-from .views.users import UserDetail, ContactDetail, ContactList
+from .views.users import UserDetail, ContactDetail, ContactList, UserList
 from .views.email_confirmation import email_token_confirmation
 
 
@@ -22,6 +22,7 @@ def setup_routes(app):
             ContactDetail
         ),
 
+        web.view(r'/api/users/', UserList),
         web.view(r'/api/users/{user_id:\d+}', UserDetail),
 
         web.view('/api/chats/', Chats),
