@@ -1,6 +1,9 @@
 from datetime import datetime
 
 from chat_with_anyone.db import db
+from sqlalchemy import or_
+
+from .contact import Contact
 
 
 class User(db.Model):
@@ -28,3 +31,11 @@ class User(db.Model):
     def add_contact(self, user):
         self._contacts.add(user)
         user._contacts.add(self)
+
+    async def delete_relations(self):
+        await Contact.delete.where(
+            or_(
+                Contact.owner_id == self.id,
+                Contact.contact_id == self.id
+            )
+        ).gino.status()
