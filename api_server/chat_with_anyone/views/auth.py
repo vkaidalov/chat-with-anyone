@@ -8,6 +8,7 @@ from passlib.hash import bcrypt
 
 from ..models.user import User
 from ..utils import send_email
+from ..decorators import token_and_active_required
 
 
 class SigninRequestSchema(Schema):
@@ -122,13 +123,9 @@ async def sign_in(request):
         'schema': {'type': 'string'},
         'required': 'true'
     }])
+@token_and_active_required
 async def sign_out(request):
-    if request["user"]:
-        user = request["user"]
-    else:
-        return web.json_response(
-            {"message": "Authorization token is required."}, status=401
-        )
+    user = request["user"]
     request_user_id = int(request.match_info.get('user_id'))
     if user.id != request_user_id:
         return web.json_response(
