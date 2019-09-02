@@ -1,10 +1,11 @@
-from secrets import token_urlsafe
+from datetime import datetime
 
 from aiohttp import web
 from aiohttp_apispec import docs, request_schema, response_schema
 from asyncpg import UniqueViolationError
 from marshmallow import Schema, fields, validate
 from passlib.hash import bcrypt
+from secrets import token_urlsafe
 
 from ..models.user import User
 from ..utils import send_email
@@ -109,7 +110,8 @@ async def sign_in(request):
             {'message': 'Invalid credentials.'}, status=400
         )
 
-    await user.update(token=token_urlsafe(30)).apply()
+    await user.update(
+        token=token_urlsafe(30), token_created_at=datetime.utcnow()).apply()
     return web.json_response({'token': user.token, 'user_id': user.id})
 
 

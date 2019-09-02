@@ -9,6 +9,7 @@ from settings import get_config
 config = get_config()
 
 app = web.Application(middlewares=[db])
+app['config'] = config
 db.init_app(app, config=config["postgres"])
 setup_middlewares(app)
 setup_routes(app)

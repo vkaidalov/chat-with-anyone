@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from aiohttp import web
 from aiohttp_apispec import validation_middleware
 
@@ -15,6 +17,15 @@ async def authorization(request, handler):
             return web.json_response(
                 {"message": "Provided token is invalid."}, status=403
             )
+        time_now = datetime.utcnow()
+        expires_at = user.token_created_at + timedelta(
+            **request.app['config']['token_expires']
+        )
+        if time_now > expires_at:
+            return web.json_response(
+                {"message": "Token is expired."}, status=403
+            )
+
         request["user"] = user
 
     return await handler(request)
