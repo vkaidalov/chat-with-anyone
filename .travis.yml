@@ -24,4 +24,4 @@ matrix:
         - alembic upgrade head
       script:
         - pytest
-        - pylint char_with_anyone
+        - pylint chat_with_anyone
