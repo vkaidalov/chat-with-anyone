@@ -8,6 +8,7 @@ from sqlalchemy import and_
 
 from ..models.user import User
 from ..models.contact import Contact
+from ..decorators import token_and_active_required
 
 
 class UserRequestSchema(Schema):
@@ -91,12 +92,8 @@ class UserList(web.View):
         ]
     )
     @marshal_with(UserResponseSchema(many=True))
+    @token_and_active_required
     async def get(self):
-        if not self.request["user"]:
-            return web.json_response(
-                {"message": "Authorization token is required."}, status=401
-            )
-
         query = self.request.query
 
         try:
@@ -145,12 +142,8 @@ class UserDetail(web.View):
         }]
     )
     @response_schema(UserResponseSchema())
+    @token_and_active_required
     async def get(self):
-        if not self.request["user"]:
-            return web.json_response(
-                {"message": "Authorization token is required."}, status=401
-            )
-
         request_user_id = self.request.match_info.get('user_id')
         request_user = await User.get(int(request_user_id))
 
@@ -174,13 +167,9 @@ class UserDetail(web.View):
         }]
     )
     @request_schema(UserRequestSchema(strict=True))
+    @token_and_active_required
     async def patch(self):
-        if self.request["user"]:
-            user = self.request["user"]
-        else:
-            return web.json_response(
-                {"message": "Authorization token is required."}, status=401
-            )
+        user = self.request["user"]
         request_user_id = int(self.request.match_info.get('user_id'))
         if user.id != request_user_id:
             return web.json_response(
@@ -211,13 +200,9 @@ class UserDetail(web.View):
             'schema': {'type': 'string'},
             'required': 'true'
         }])
+    @token_and_active_required
     async def delete(self):
-        if self.request["user"]:
-            user = self.request["user"]
-        else:
-            return web.json_response(
-                {"message": "Authorization token is required."}, status=401
-            )
+        user = self.request["user"]
         request_user_id = int(self.request.match_info.get('user_id'))
         if user.id != request_user_id:
             return web.json_response(
@@ -225,6 +210,7 @@ class UserDetail(web.View):
                 status=403
             )
 
+        await user.delete_relations()
         await user.delete()
 
         return web.json_response(status=204)
@@ -242,13 +228,9 @@ class ContactList(web.View):
         }]
     )
     @request_schema(ContactRequestSchema(strict=True))
+    @token_and_active_required
     async def post(self):
-        if self.request["user"]:
-            user = self.request["user"]
-        else:
-            return web.json_response(
-                {"message": "Authorization token is required."}, status=401
-            )
+        user = self.request["user"]
         request_user_id = int(self.request.match_info.get('user_id'))
         if user.id != request_user_id:
             return web.json_response(
@@ -283,13 +265,9 @@ class ContactList(web.View):
         }]
     )
     @marshal_with(UserResponseSchema(many=True))
+    @token_and_active_required
     async def get(self):
-        if self.request["user"]:
-            user = self.request["user"]
-        else:
-            return web.json_response(
-                {"message": "Authorization token is required."}, status=401
-            )
+        user = self.request["user"]
         request_user_id = int(self.request.match_info.get('user_id'))
         if user.id != request_user_id:
             return web.json_response(
@@ -327,13 +305,9 @@ class ContactDetail(web.View):
             'required': 'true'
         }]
     )
+    @token_and_active_required
     async def delete(self):
-        if self.request["user"]:
-            user = self.request["user"]
-        else:
-            return web.json_response(
-                {"message": "Authorization token is required."}, status=401
-            )
+        user = self.request["user"]
         request_user_id = int(self.request.match_info.get('user_id'))
         request_contact_id = int(self.request.match_info.get('contact_id'))
         if user.id != request_user_id:
