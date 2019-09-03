@@ -1,3 +1,4 @@
+from secrets import token_urlsafe
 from datetime import datetime
 
 from aiohttp import web
@@ -5,7 +6,6 @@ from aiohttp_apispec import docs, request_schema, response_schema
 from asyncpg import UniqueViolationError
 from marshmallow import Schema, fields, validate
 from passlib.hash import bcrypt
-from secrets import token_urlsafe
 
 from ..models.user import User
 from ..utils import send_email
