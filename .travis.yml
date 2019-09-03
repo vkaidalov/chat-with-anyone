@@ -1,0 +1,27 @@
+sudo: required
+dist: trusty
+language: python
+matrix:
+  include:
+    - language: python
+      python: 3.7
+      cache: pip
+      before_install: cd api_server
+      install:
+        - pip install -r requirements.txt
+      services:
+        - postgresql
+      addons:
+        postgresql: '10'
+      before_script:
+        - psql -U postgres -c "CREATE DATABASE chat_with_anyone;"
+        - psql -c "CREATE USER chat_with_anyone WITH PASSWORD 'chat_with_anyone';" -U postgres
+        - psql -c "ALTER ROLE chat_with_anyone SET client_encoding TO 'utf8';" -U postgres
+        - psql -c "ALTER ROLE chat_with_anyone SET default_transaction_isolation TO 'read committed';" -U postgres
+        - psql -c "ALTER ROLE chat_with_anyone SET timezone TO 'UTC';" -U postgres
+        - psql -c "GRANT ALL PRIVILEGES ON DATABASE happykh TO chat_with_anyone;" -U postgres
+        - psql -c "ALTER USER chat_with_anyone CREATEDB;" -U postgres
+        - alembic upgrade head
+      script:
+        - pytest
+        - pylint char_with_anyone
