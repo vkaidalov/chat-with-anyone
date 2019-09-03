@@ -19,7 +19,7 @@ matrix:
         - psql -c "ALTER ROLE chat_with_anyone SET client_encoding TO 'utf8';" -U postgres
         - psql -c "ALTER ROLE chat_with_anyone SET default_transaction_isolation TO 'read committed';" -U postgres
         - psql -c "ALTER ROLE chat_with_anyone SET timezone TO 'UTC';" -U postgres
-        - psql -c "GRANT ALL PRIVILEGES ON DATABASE happykh TO chat_with_anyone;" -U postgres
+        - psql -c "GRANT ALL PRIVILEGES ON DATABASE chat_with_anyone TO chat_with_anyone;" -U postgres
         - psql -c "ALTER USER chat_with_anyone CREATEDB;" -U postgres
         - alembic upgrade head
       script:
