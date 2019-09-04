@@ -210,7 +210,6 @@ class UserDetail(web.View):
                 status=403
             )
 
-        await user.delete_relations()
         await user.delete()
 
         return web.json_response(status=204)
