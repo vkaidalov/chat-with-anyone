@@ -18,3 +18,13 @@ services:
             POSTGRES_PASSWORD: chat_with_anyone
             POSTGRES_USER: chat_with_anyone
             POSTGRES_DB: chat_with_anyone
+
+    chat-frontend:
+        image: node:10
+        command: yarn start
+        ports:
+            - 3000:3000
+        volumes:
+            - ./react-client:/usr/src/app
+        working_dir: /usr/src/app
+

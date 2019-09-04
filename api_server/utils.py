@@ -14,4 +14,11 @@ TRAFARET = tr.Dict({
         }),
     tr.Key('host'): tr.IP,
     tr.Key('port'): tr.Int(),
+    tr.Key('token_expires'):
+    tr.Dict({
+        tr.Key('days', optional=True): tr.Int(),
+        tr.Key('hours', optional=True): tr.Int(),
+        tr.Key('minutes', optional=True): tr.Int(),
+        tr.Key('seconds', optional=True): tr.Int()
+    })
 })

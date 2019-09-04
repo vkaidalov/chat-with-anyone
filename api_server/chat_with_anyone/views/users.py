@@ -8,6 +8,7 @@ from sqlalchemy import and_
 
 from ..models.user import User
 from ..models.contact import Contact
+from ..decorators import token_and_active_required
 
 
 class UserRequestSchema(Schema):
@@ -39,6 +40,96 @@ class ContactRequestSchema(Schema):
     contact_id = fields.Int()
 
 
+class UserListResponseSchema(Schema):
+    id = fields.Int()
+    username = fields.Str(
+        validate=validate.Length(max=40), required=True
+    )
+    first_name = fields.Str(
+        validate=validate.Length(max=30)
+    )
+    last_name = fields.Str(
+        validate=validate.Length(max=150)
+    )
+
+
+class UserList(web.View):
+    @docs(
+        tags=['User'],
+        summary="Return all users.",
+        parameters=[
+            {
+                'in': 'header',
+                'name': 'Authorization',
+                'schema': {'type': 'string'},
+                'required': 'true'
+            },
+            {
+                'in': 'query',
+                'name': 'username',
+                'schema': {'type': 'string'},
+            },
+            {
+                'in': 'query',
+                'name': 'first_name',
+                'schema': {'type': 'string'},
+            },
+            {
+                'in': 'query',
+                'name': 'last_name',
+                'schema': {'type': 'string'},
+            },
+            {
+                'in': 'query',
+                'name': 'page',
+                'schema': {'type': 'integer'},
+            },
+            {
+                'in': 'query',
+                'name': 'page_size',
+                'schema': {'type': 'integer'},
+            }
+        ]
+    )
+    @marshal_with(UserResponseSchema(many=True))
+    @token_and_active_required
+    async def get(self):
+        query = self.request.query
+
+        try:
+            page = int(query.get('page', 1))
+            page_size = int(query.get('page_size', 10))
+        except ValueError:
+            page = 1
+            page_size = 10
+
+        # one page pagination limit
+        if page_size > 50:
+            page_size = 50
+
+        username = query.get('username')
+        first_name = query.get('first_name')
+        last_name = query.get('last_name')
+
+        condition = []
+
+        if username:
+            condition.append(User.username.ilike(f'%{username}%'))
+        if first_name:
+            condition.append(User.first_name.ilike(f'%{first_name}%'))
+        if last_name:
+            condition.append(User.last_name.ilike(f'%{last_name}%'))
+
+        users = await User.query.where(and_(*condition))\
+            .limit(page_size).offset(page*page_size - page_size).gino.all()
+
+        return web.json_response(
+            UserListResponseSchema().dump(
+                [user.to_dict() for user in users],
+                many=True
+            ).data)
+
+
 class UserDetail(web.View):
     @docs(
         tags=['User'],
@@ -51,12 +142,8 @@ class UserDetail(web.View):
         }]
     )
     @response_schema(UserResponseSchema())
+    @token_and_active_required
     async def get(self):
-        if not self.request["user"]:
-            return web.json_response(
-                {"message": "Authorization token is required."}, status=401
-            )
-
         request_user_id = self.request.match_info.get('user_id')
         request_user = await User.get(int(request_user_id))
 
@@ -80,13 +167,9 @@ class UserDetail(web.View):
         }]
     )
     @request_schema(UserRequestSchema(strict=True))
+    @token_and_active_required
     async def patch(self):
-        if self.request["user"]:
-            user = self.request["user"]
-        else:
-            return web.json_response(
-                {"message": "Authorization token is required."}, status=401
-            )
+        user = self.request["user"]
         request_user_id = int(self.request.match_info.get('user_id'))
         if user.id != request_user_id:
             return web.json_response(
@@ -105,7 +188,7 @@ class UserDetail(web.View):
                 {'message': e.as_dict()['detail']},
                 status=400
             )
-        
+
         return web.json_response(status=204)
 
     @docs(
@@ -117,22 +200,18 @@ class UserDetail(web.View):
             'schema': {'type': 'string'},
             'required': 'true'
         }])
+    @token_and_active_required
     async def delete(self):
-        if self.request["user"]:
-            user = self.request["user"]
-        else:
-            return web.json_response(
-                {"message": "Authorization token is required."}, status=401
-            )
+        user = self.request["user"]
         request_user_id = int(self.request.match_info.get('user_id'))
         if user.id != request_user_id:
             return web.json_response(
                 {"message": "Deleting other's profile is forbidden."},
                 status=403
             )
-        
+
         await user.delete()
-        
+
         return web.json_response(status=204)
 
 
@@ -148,13 +227,9 @@ class ContactList(web.View):
         }]
     )
     @request_schema(ContactRequestSchema(strict=True))
+    @token_and_active_required
     async def post(self):
-        if self.request["user"]:
-            user = self.request["user"]
-        else:
-            return web.json_response(
-                {"message": "Authorization token is required."}, status=401
-            )
+        user = self.request["user"]
         request_user_id = int(self.request.match_info.get('user_id'))
         if user.id != request_user_id:
             return web.json_response(
@@ -171,6 +246,10 @@ class ContactList(web.View):
             return web.json_response(
                 {"message": "Specified 'contact_id' is invalid."}, status=400
             )
+        except UniqueViolationError:
+            return web.json_response(
+                {"message": "'contact_id' already exists"}, status=400
+            )
 
         return web.json_response(status=201)
 
@@ -185,13 +264,9 @@ class ContactList(web.View):
         }]
     )
     @marshal_with(UserResponseSchema(many=True))
+    @token_and_active_required
     async def get(self):
-        if self.request["user"]:
-            user = self.request["user"]
-        else:
-            return web.json_response(
-                {"message": "Authorization token is required."}, status=401
-            )
+        user = self.request["user"]
         request_user_id = int(self.request.match_info.get('user_id'))
         if user.id != request_user_id:
             return web.json_response(
@@ -204,7 +279,8 @@ class ContactList(web.View):
         query = User.outerjoin(
             Contact, onclause=(User.id == Contact.owner_id)
         ).outerjoin(
-            user_class_alias, onclause=(user_class_alias.id == Contact.contact_id)
+            user_class_alias, onclause=(
+                user_class_alias.id == Contact.contact_id)
         ).select().where(User.id == request_user_id)
 
         users = await query.gino.load(
@@ -228,13 +304,9 @@ class ContactDetail(web.View):
             'required': 'true'
         }]
     )
+    @token_and_active_required
     async def delete(self):
-        if self.request["user"]:
-            user = self.request["user"]
-        else:
-            return web.json_response(
-                {"message": "Authorization token is required."}, status=401
-            )
+        user = self.request["user"]
         request_user_id = int(self.request.match_info.get('user_id'))
         request_contact_id = int(self.request.match_info.get('contact_id'))
         if user.id != request_user_id:
