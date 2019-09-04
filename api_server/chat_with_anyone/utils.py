@@ -36,7 +36,7 @@ async def send_email(receiver_email, email_token):
     context = ssl.create_default_context()
 
     with smtplib.SMTP_SSL(
-        'smtp.gmail.com', 465, context=context
+            'smtp.gmail.com', 465, context=context
     ) as smtp_server:
 
         smtp_server.login(sender_email, password)
