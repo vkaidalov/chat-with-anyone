@@ -1,5 +1,6 @@
-from aiohttp import web
 import inspect
+
+from aiohttp import web
 
 
 def token_and_active_required(function_to_decorate):
