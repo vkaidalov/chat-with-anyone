@@ -5,6 +5,7 @@ from aiohttp_apispec import (
 from asyncpg import ForeignKeyViolationError, UniqueViolationError
 from marshmallow import Schema, fields, validate
 from sqlalchemy import and_
+from passlib.hash import bcrypt
 
 from ..models.user import User
 from ..models.contact import Contact
@@ -50,6 +51,12 @@ class UserListResponseSchema(Schema):
     )
     last_name = fields.Str(
         validate=validate.Length(max=150)
+    )
+
+
+class PasswordChangeRequestSchema(Schema):
+    password = fields.Str(
+        validate=validate.Length(max=255), required=True
     )
 
 
@@ -322,5 +329,38 @@ class ContactDetail(web.View):
                 Contact.contact_id == request_contact_id
             )
         ).gino.status()
+
+        return web.json_response(status=204)
+
+
+class PasswordChange(web.View):
+    @docs(
+        tags=['PasswordChange'],
+        summary='Change user`s password',
+    )
+    @request_schema(PasswordChangeRequestSchema(strict=True))
+    async def patch(self):
+        data = await self.request.json()
+        
+        request_user_id = int(self.request.match_info.get('user_id'))
+        request_user = await User.get(int(request_user_id))
+
+        if not request_user:
+            return web.json_response(
+                {"message": "User not found"},
+                status=401
+            )
+
+        try:
+            await request_user.update(
+                # =data.get('first_name', request_user.first_name)
+                password=bcrypt.hash(data['password'])
+            ).apply()
+
+        except UniqueViolationError as ex:
+            return web.json_response(
+                {'message': ex.as_dict()['detail']},
+                status=400
+            )
 
         return web.json_response(status=204)
