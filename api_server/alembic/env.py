@@ -14,6 +14,9 @@ sys.path.append(BASE_DIR)
 from chat_with_anyone.db import db  # noqa
 import chat_with_anyone.models.user  # noqa
 import chat_with_anyone.models.contact  # noqa
+import chat_with_anyone.models.group_room  # noqa
+import chat_with_anyone.models.group_message  # noqa
+import chat_with_anyone.models.group_membership  # noqa
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
