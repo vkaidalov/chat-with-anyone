@@ -1,5 +1,5 @@
-from chat_with_anyone.db import db
 from datetime import datetime
+from chat_with_anyone.db import db
 
 
 class GroupRoom(db.Model):
