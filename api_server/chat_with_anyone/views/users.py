@@ -173,7 +173,8 @@ class UserDetail(web.View):
         request_user_id = int(self.request.match_info.get('user_id'))
         if user.id != request_user_id:
             return web.json_response(
-                {"message": "Patching other's profile is forbidden."}, status=403
+                {"message": "Patching other's profile is forbidden."},
+                status=403
             )
 
         data = await self.request.json()

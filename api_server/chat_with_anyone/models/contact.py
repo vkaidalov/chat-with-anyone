@@ -8,5 +8,9 @@ class Contact(db.Model):
             'owner_id', 'contact_id', name='contacts_owner_contact')
     )
 
-    owner_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
-    contact_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
+    owner_id = db.Column(
+        db.Integer, db.ForeignKey('users.id', ondelete='CASCADE')
+    )
+    contact_id = db.Column(
+        db.Integer, db.ForeignKey('users.id', ondelete='CASCADE')
+    )
