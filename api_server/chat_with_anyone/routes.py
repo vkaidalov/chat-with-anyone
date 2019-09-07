@@ -1,9 +1,10 @@
 from aiohttp import web
 
-from .views.auth import sign_in, sign_up, sign_out
-from .views.chats import Chats, ChatMessages, ChatMessageDetails
-from .views.users import UserDetail, ContactDetail, ContactList, UserList
+from .views.auth import sign_in, sign_out, sign_up
+from .views.chats import (ChatUserList, ChatMessageDetails, ChatMessages,
+                          Chats, ChatUserDetails)
 from .views.email_confirmation import email_token_confirmation
+from .views.users import ContactDetail, ContactList, UserDetail, UserList
 
 
 def setup_routes(app):
@@ -26,6 +27,12 @@ def setup_routes(app):
         web.view(r'/api/users/{user_id:\d+}', UserDetail),
 
         web.view('/api/chats/', Chats),
+        web.view(r'/api/chats/{chat_id:\d+}/users/', ChatUserList),
+        web.view(
+            r'/api/chats/{chat_id:\d+}/users/{user_id:\d+}/',
+            ChatUserDetails
+        ),
+
         web.view(r'/api/chats/{chat_id:\d+}/messages/', ChatMessages),
         web.view(
             r'/api/chats/{chat_id:\d+}/messages/{message_id:\d+}',
