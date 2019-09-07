@@ -55,7 +55,13 @@ class UserListResponseSchema(Schema):
 
 
 class PasswordChangeRequestSchema(Schema):
-    password = fields.Str(
+    old_password = fields.Str(
+        validate=validate.Length(max=255), required=True
+    )
+    new_password = fields.Str(
+        validate=validate.Length(max=255), required=True
+    )
+    new_password_repeat = fields.Str(
         validate=validate.Length(max=255), required=True
     )
 
@@ -337,11 +343,19 @@ class PasswordChange(web.View):
     @docs(
         tags=['PasswordChange'],
         summary='Change user`s password',
+        parameters=[{
+            'in': 'header',
+            'name': 'Authorization',
+            'schema': {'type': 'string'},
+            'required': 'true'
+        }]
     )
     @request_schema(PasswordChangeRequestSchema(strict=True))
+    @token_and_active_required
     async def patch(self):
         data = await self.request.json()
-        
+        user = self.request['user']
+
         request_user_id = int(self.request.match_info.get('user_id'))
         request_user = await User.get(int(request_user_id))
 
@@ -351,10 +365,29 @@ class PasswordChange(web.View):
                 status=401
             )
 
+        if user.id != request_user_id:
+            return web.json_response(
+                {"message": "Requested user_id doesn`t correspond current user_id"},
+                status=403
+            )
+
+        old_password = request_user.password
+
+        if not bcrypt.verify(data['old_password'], old_password):
+            return web.json_response(
+                {"message": "The old password you entered doesn`t match"},
+                status=403
+            )
+
+        if data['new_password'] != data['new_password_repeat']:
+            return web.json_response(
+                {"message": "Passwords do not match"},
+                status=403
+            )
+
         try:
             await request_user.update(
-                # =data.get('first_name', request_user.first_name)
-                password=bcrypt.hash(data['password'])
+                password=bcrypt.hash(data['new_password'])
             ).apply()
 
         except UniqueViolationError as ex:

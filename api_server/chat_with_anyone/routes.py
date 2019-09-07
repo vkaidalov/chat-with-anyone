@@ -26,7 +26,7 @@ def setup_routes(app):
         web.view(r'/api/users/', UserList),
         web.view(r'/api/users/{user_id:\d+}', UserDetail),
 
-        web.view(r'/api/users/{user_id:\d+}/change_password', PasswordChange),
+        web.view(r'/api/users/{user_id:\d+}/change-password', PasswordChange),
 
         web.view('/api/chats/', Chats),
         web.view(r'/api/chats/{chat_id:\d+}/messages/', ChatMessages),
