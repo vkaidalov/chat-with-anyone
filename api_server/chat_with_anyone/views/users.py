@@ -367,7 +367,10 @@ class PasswordChange(web.View):
 
         if user.id != request_user_id:
             return web.json_response(
-                {"message": "Requested user_id doesn`t correspond current user_id"},
+                {
+                    "message":
+                    "Requested user_id doesn`t correspond current user_id"
+                },
                 status=403
             )
 
