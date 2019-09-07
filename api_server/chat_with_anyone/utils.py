@@ -5,7 +5,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 
-async def send_email(receiver_email, email_token):
+async def send_email(receiver_email, host, email_token):
     sender_email = 'chat0with0anyone@gmail.com'
     password = 'chat_admin'
 
@@ -23,13 +23,13 @@ async def send_email(receiver_email, email_token):
         </head>
         <body>
             <p>The link below:<br>
-            <a href="http://localhost:8000/api/email-confirmation/{0}">
-                {0}
+            <a href="http://{0}/api/email-confirmation/{1}">
+                {1}
             </a>
             </p>
         </body>
     </html>
-    """.format(email_token)
+    """.format(host, email_token)
 
     msg.attach(MIMEText(html, 'html'))
 

@@ -74,7 +74,10 @@ async def sign_up(request):
         )
 
     try:
-        await send_email(receiver_email=data['email'], email_token=email_token)
+        await send_email(receiver_email=data['email'],
+                         host=request.host,
+                         email_token=email_token
+                         )
     except AttributeError:
         await User.delete.where(User.email == data['email']).gino.status()
 
