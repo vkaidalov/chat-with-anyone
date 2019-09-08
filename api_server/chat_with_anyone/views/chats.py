@@ -50,14 +50,16 @@ class Chats(web.View):
 
 
 class ChatMessages(web.View):
-    @docs(tags=['message'],
-          summary='Fetch all message in chat',
-          parameters=[{
+    @docs(
+        tags=['message'],
+        summary='Fetch all message in chat',
+        parameters=[{
             'in': 'header',
             'name': 'Authorization',
             'schema': {'type': 'string'},
             'required': 'true'
-          }])
+        }]
+    )
     @response_schema(MessageResponseSchema(many=True))
     @response_schema(MessageResponseSchema())
     @token_and_active_required
@@ -88,14 +90,16 @@ class ChatMessages(web.View):
                 many=True
             ).data)
 
-    @docs(tags=['message'],
-          summary='Create new message',
-          parameters=[{
+    @docs(
+        tags=['message'],
+        summary='Create new message',
+        parameters=[{
             'in': 'header',
             'name': 'Authorization',
             'schema': {'type': 'string'},
             'required': 'true'
-          }])
+        }]
+    )
     @request_schema(MessageRequestSchema(strict=True))
     @token_and_active_required
     async def post(self):
