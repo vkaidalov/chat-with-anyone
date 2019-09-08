@@ -5,6 +5,7 @@ from aiohttp_apispec import (
 from asyncpg import ForeignKeyViolationError, UniqueViolationError
 from marshmallow import Schema, fields, validate
 from sqlalchemy import and_
+from passlib.hash import bcrypt
 
 from ..models.user import User
 from ..models.contact import Contact
@@ -50,6 +51,18 @@ class UserListResponseSchema(Schema):
     )
     last_name = fields.Str(
         validate=validate.Length(max=150)
+    )
+
+
+class PasswordChangeRequestSchema(Schema):
+    old_password = fields.Str(
+        validate=validate.Length(max=255), required=True
+    )
+    new_password = fields.Str(
+        validate=validate.Length(max=255), required=True
+    )
+    new_password_repeat = fields.Str(
+        validate=validate.Length(max=255), required=True
     )
 
 
@@ -322,5 +335,68 @@ class ContactDetail(web.View):
                 Contact.contact_id == request_contact_id
             )
         ).gino.status()
+
+        return web.json_response(status=204)
+
+
+class PasswordChange(web.View):
+    @docs(
+        tags=['PasswordChange'],
+        summary='Change user`s password',
+        parameters=[{
+            'in': 'header',
+            'name': 'Authorization',
+            'schema': {'type': 'string'},
+            'required': 'true'
+        }]
+    )
+    @request_schema(PasswordChangeRequestSchema(strict=True))
+    @token_and_active_required
+    async def patch(self):
+        data = await self.request.json()
+        user = self.request['user']
+
+        request_user_id = int(self.request.match_info.get('user_id'))
+        request_user = await User.get(int(request_user_id))
+
+        if not request_user:
+            return web.json_response(
+                {"message": "User not found"},
+                status=401
+            )
+
+        if user.id != request_user_id:
+            return web.json_response(
+                {
+                    "message":
+                    "Requested user_id doesn`t correspond current user_id"
+                },
+                status=403
+            )
+
+        old_password = request_user.password
+
+        if not bcrypt.verify(data['old_password'], old_password):
+            return web.json_response(
+                {"message": "The old password you entered doesn`t match"},
+                status=403
+            )
+
+        if data['new_password'] != data['new_password_repeat']:
+            return web.json_response(
+                {"message": "Passwords do not match"},
+                status=403
+            )
+
+        try:
+            await request_user.update(
+                password=bcrypt.hash(data['new_password'])
+            ).apply()
+
+        except UniqueViolationError as ex:
+            return web.json_response(
+                {'message': ex.as_dict()['detail']},
+                status=400
+            )
 
         return web.json_response(status=204)
