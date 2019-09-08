@@ -1,6 +1,12 @@
 from aiohttp import web
 from aiohttp_apispec import docs, request_schema, response_schema
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, validate
+from sqlalchemy import and_
+
+from ..models.group_room import GroupRoom
+from ..models.group_message import GroupMessage
+from ..models.group_membership import GroupMembership
+from ..decorators import token_and_active_required
 
 
 class ChatRequestSchema(Schema):
@@ -15,11 +21,13 @@ class ChatResponseSchema(Schema):
 
 
 class MessageRequestSchema(Schema):
-    pass
+    text = fields.Str(validate=validate.Length(max=500), required=True)
 
 
 class MessageResponseSchema(Schema):
-    pass
+    id = fields.Int()
+    text = fields.Str(validate=validate.Length(max=500), required=True)
+    created_at = fields.DateTime()
 
 
 class Chats(web.View):
@@ -42,22 +50,74 @@ class Chats(web.View):
 
 
 class ChatMessages(web.View):
-    @docs(tags=['message'], summary='Create new message')
-    @request_schema(MessageRequestSchema(strict=True))
-    @response_schema(MessageResponseSchema(), 200)
-    async def post(self):
-        chat_id = self.request.match_info.get('chat_id')
-        print('chat.messages.post', chat_id)
-
-        return web.json_response({}, status=201)
-
-    @docs(tags=['message'], summary='Fetch all message in chat')
-    @response_schema(MessageResponseSchema(), 200)
+    @docs(tags=['message'],
+          summary='Fetch all message in chat',
+          parameters=[{
+            'in': 'header',
+            'name': 'Authorization',
+            'schema': {'type': 'string'},
+            'required': 'true'
+          }])
+    @response_schema(MessageResponseSchema(many=True))
+    @response_schema(MessageResponseSchema())
+    @token_and_active_required
     async def get(self):
         chat_id = self.request.match_info.get('chat_id')
-        print('chat.messages.get', chat_id)
+        chat = await GroupRoom.get(int(chat_id))
+        if not chat:
+            return web.json_response(
+                {'message': 'Chat not found.'}, status=404
+            )
+        user = self.request["user"]
 
-        return web.json_response([])
+        room_member = await GroupMembership.query.where(and_(
+            GroupMembership.room_id == int(chat_id),
+            GroupMembership.user_id == user.id)).gino.first()
+        if not room_member:
+            return web.json_response(
+                {'message': "Getting messages is forbidden. "
+                            "User is not in chat."}, status=403
+            )
+
+        messages = await GroupMessage.query.where(
+            GroupMessage.room_id == int(chat_id)).gino.all()
+
+        return web.json_response(
+            MessageResponseSchema().dump(
+                [message.to_dict() for message in messages],
+                many=True
+            ).data)
+
+    @docs(tags=['message'],
+          summary='Create new message',
+          parameters=[{
+            'in': 'header',
+            'name': 'Authorization',
+            'schema': {'type': 'string'},
+            'required': 'true'
+          }])
+    @request_schema(MessageRequestSchema(strict=True))
+    @token_and_active_required
+    async def post(self):
+        chat_id = self.request.match_info.get('chat_id')
+        user = self.request["user"]
+
+        room_member = await GroupMembership.query.where(and_(
+            GroupMembership.room_id == int(chat_id),
+            GroupMembership.user_id == user.id)).gino.first()
+        if not room_member:
+            return web.json_response(
+                {'message': "Posting messages is forbidden. "
+                            "User is not in chat."}, status=403
+            )
+
+        await GroupMessage.create(
+            text=self.request["data"]["text"],
+            room_id=int(chat_id),
+            user_id=user.id
+        )
+
+        return web.json_response(status=201)
 
 
 class ChatMessageDetails(web.View):
