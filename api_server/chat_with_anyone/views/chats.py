@@ -66,6 +66,7 @@ class ChatUserList(web.View):
     @request_schema(AddUserRequestSchema(strict=True))
     @token_and_active_required
     async def post(self):
+        user = self.request["user"]
         request_chat_id = int(self.request.match_info.get('chat_id'))
         request_chat = await GroupRoom.get(request_chat_id)
 
@@ -77,6 +78,22 @@ class ChatUserList(web.View):
 
         user_id = self.request.get('data', {}).get('user_id')
 
+        if user.id != user_id:
+            user_group = await GroupMembership.query.where(
+                and_(
+                    GroupMembership.user_id == user.id,
+                    GroupMembership.room_id == request_chat_id
+                )
+            ).gino.first()
+
+            if user_group is None:
+                message = 'You have not been assigned with provided chat'
+
+                return web.json_response(
+                    {'message': message},
+                    status=403
+                )
+
         try:
             await GroupMembership.create(
                 room_id=request_chat_id,
@@ -84,7 +101,7 @@ class ChatUserList(web.View):
             )
         except ForeignKeyViolationError:
             return web.json_response(
-                {"message": "Provided chat_id or user_id is invalid."},
+                {"message": "Provided chat_id or user_id is invalid"},
                 status=400
             )
         except UniqueViolationError:
@@ -109,8 +126,15 @@ class ChatUserDetails(web.View):
     )
     @token_and_active_required
     async def delete(self):
+        user = self.request["user"]
         request_user_id = int(self.request.match_info.get('user_id'))
         request_chat_id = int(self.request.match_info.get('chat_id'))
+
+        if user.id != request_user_id:
+            return web.json_response(
+                {"message": "Deleting another user is forbidden"},
+                status=403
+            )
 
         request_chat = await GroupRoom.get(request_chat_id)
 
