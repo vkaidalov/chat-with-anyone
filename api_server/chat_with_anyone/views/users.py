@@ -324,9 +324,24 @@ class ContactDetail(web.View):
         request_user_id = int(self.request.match_info.get('user_id'))
         request_contact_id = int(self.request.match_info.get('contact_id'))
         if user.id != request_user_id:
+            message = "Deleting from other's contact list is forbidden"
             return web.json_response(
-                {"message": "Deleting from other's contact list is forbidden."},
+                {"message": message},
                 status=403
+            )
+
+        request_contact = await Contact.query.where(
+            and_(
+                Contact.owner_id == request_user_id,
+                Contact.contact_id == request_contact_id
+            )
+        ).gino.first()
+
+        if request_contact is None:
+            message = f'Contact with ID "{request_contact_id}" already deleted'
+            return web.json_response(
+                {'message': message},
+                status=404
             )
 
         await Contact.delete.where(
