@@ -18,8 +18,7 @@ class ChatRequestSchema(Schema):
 
 class ChatResponseSchema(Schema):
     id = fields.Int()
-    name = fields.Str()
-    description = fields.Str()
+    name = fields.Str(validate=validate.Length(max=200), required=True)
 
 
 class AddUserRequestSchema(Schema):
@@ -46,7 +45,33 @@ class Chats(web.View):
 
         return web.json_response({}, status=201)
 
-    @docs(tags=['chats'], summary='Fetch list of chats')
+    @docs(
+        tags=['chats'],
+        summary='Fetch list of chats',
+        parameters=[
+            {
+                'in': 'header',
+                'name': 'Authorization',
+                'schema': {'type': 'string'},
+                'required': 'true'
+            },
+            {
+                'in': 'query',
+                'name': 'name',
+                'schema': {'type': 'string'},
+            },
+            {
+                'in': 'query',
+                'name': 'page',
+                'schema': {'type': 'integer'},
+            },
+            {
+                'in': 'query',
+                'name': 'page_size',
+                'schema': {'type': 'integer'},
+            }
+        ]
+    )
     @response_schema(ChatResponseSchema(), 200)
     async def get(self):
         query = self.request.query
@@ -169,10 +194,10 @@ class ChatUserDetails(web.View):
             )
         ).gino.status()
 
-        last_user = await db\
-            .select([db.func.count(GroupMembership.user_id)])\
-            .where(GroupMembership.room_id == request_chat_id)\
-            .gino\
+        last_user = await db \
+            .select([db.func.count(GroupMembership.user_id)]) \
+            .where(GroupMembership.room_id == request_chat_id) \
+            .gino \
             .scalar()
 
         if last_user == 0:
