@@ -18,8 +18,9 @@ class ChatRequestSchema(Schema):
 
 class ChatResponseSchema(Schema):
     id = fields.Int()
-    name = fields.Str()
-    description = fields.Str()
+    name = fields.Str(
+        validate=validate.Length(max=200), required=True
+    )
 
 
 class AddUserRequestSchema(Schema):
@@ -46,13 +47,63 @@ class Chats(web.View):
 
         return web.json_response({}, status=201)
 
-    @docs(tags=['chats'], summary='Fetch list of chats')
-    @response_schema(ChatResponseSchema(), 200)
+    @docs(
+        tags=['chats'],
+        summary='Fetch list of chats',
+        parameters=[
+            {
+                'in': 'header',
+                'name': 'Authorization',
+                'schema': {'type': 'string'},
+                'required': 'true'
+            },
+            {
+                'in': 'query',
+                'name': 'name',
+                'schema': {'type': 'string'},
+            },
+            {
+                'in': 'query',
+                'name': 'page',
+                'schema': {'type': 'integer'},
+            },
+            {
+                'in': 'query',
+                'name': 'page_size',
+                'schema': {'type': 'integer'},
+            }
+        ]
+    )
+    @response_schema(ChatResponseSchema(many=True), 200)
+    @token_and_active_required
     async def get(self):
         query = self.request.query
-        print('chats.get', query)
 
-        return web.json_response([])
+        try:
+            page = int(query.get('page', 1))
+            page_size = int(query.get('page_size', 10))
+        except ValueError:
+            page = 1
+            page_size = 10
+
+        if page_size > 50:
+            page_size = 50
+
+        name = query.get('name')
+
+        condition = []
+
+        if name:
+            condition.append(GroupRoom.name.ilike(f'%{name}%'))
+
+        chats = await GroupRoom.query.where(and_(*condition)) \
+            .limit(page_size).offset(page * page_size - page_size).gino.all()
+
+        return web.json_response(
+            ChatResponseSchema().dump(
+                [chat.to_dict() for chat in chats],
+                many=True
+            ).data)
 
 
 class ChatUserList(web.View):
@@ -169,10 +220,10 @@ class ChatUserDetails(web.View):
             )
         ).gino.status()
 
-        last_user = await db\
-            .select([db.func.count(GroupMembership.user_id)])\
-            .where(GroupMembership.room_id == request_chat_id)\
-            .gino\
+        last_user = await db \
+            .select([db.func.count(GroupMembership.user_id)]) \
+            .where(GroupMembership.room_id == request_chat_id) \
+            .gino \
             .scalar()
 
         if last_user == 0:
