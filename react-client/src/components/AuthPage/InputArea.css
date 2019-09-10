@@ -1,0 +1,13 @@
+.form__item {
+    position: relative;
+    width: 80%;
+    margin: 0 auto 30px;
+}
+
+.form__item > input {
+    color: white;
+}
+.input-field input[type=checkbox] {
+    margin: 0;
+    float: left;
+}

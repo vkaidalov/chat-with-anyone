@@ -1,0 +1,61 @@
+@import url('https://fonts.googleapis.com/css?family=Lato:400,700|Roboto:400,500,700&display=swap&subset=cyrillic');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css');
+
+:root {
+    --main-color: #5BB1CC;
+    --main-color-active: #90D9F0;
+
+    --bg-attack: #202833;
+    --bg-dark: #0B0C10;
+
+    --prime-font: 'Roboto', sans-serif;
+    --tech-font: 'Lato', sans-serif;
+}
+
+
+body {
+    background: var(--main-color-active);
+    color: white;
+}
+
+.wrapper {
+    background: url(../../assets/img/bg-pattern-full.png);
+    background-position: 25% 45%;
+    background-size: 110%;
+    background-origin: border-box;
+    background-color: var(--bg-attack);
+    background-attachment: local;
+    background-repeat: space;
+
+    display: grid;
+    grid-template-rows: 60px 2fr 4fr 60px;
+    grid-template-columns: 28px 1fr 28px;
+    grid-template-areas:
+    ".  ..  ."
+    ". icon ."
+    ". form ."
+    ".  ..  .";
+    grid-gap: 2vw;
+    align-items: center;
+
+    box-sizing: border-box;
+    max-width: 560px;
+    width: 48%; 
+    min-width: 320px;
+    height: 750px;
+    margin: 100px auto;
+    box-shadow: 2px 2px 5px 1px rgba(0,0,0,0.2);
+    border-radius: 6px;
+    }
+
+.user-icon {
+    grid-area: icon;
+    margin: 0 auto;
+    text-align: center;
+
+    grid-column-start: 2;
+    grid-column-end: 3;
+    grid-row-start: 2;
+    grid-row-end: 3;
+}
+
