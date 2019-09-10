@@ -338,7 +338,6 @@ class ChatMessageDetails(web.View):
           }]
           )
     @request_schema(MessageRequestSchema(strict=True))
-    # @response_schema(MessageResponseSchema(), 200)
     @token_and_active_required
     async def patch(self):
         data = await self.request.json()
@@ -346,9 +345,8 @@ class ChatMessageDetails(web.View):
 
         request_message_id = int(self.request.match_info.get('message_id'))
 
-        # if user.id != (group_messges.user_id)
         user_message = await GroupMessage.query.where(
-            GroupMessage.id == request_message_id).gino.all() # gino.first()
+            GroupMessage.id == request_message_id).gino.first()
 
         if not user_message:
             return web.json_response(
@@ -362,11 +360,16 @@ class ChatMessageDetails(web.View):
                 status=403
             )
 
-        print('===========')
-        print(data)
-        print('===========')
-        print(user)
-        print('===========')
+        try:
+            await user_message.update(
+                text=data['text']
+            ).apply()
+
+        except UniqueViolationError as ex:
+            return web.json_response(
+                {'message': ex.as_dict()['detail']},
+                status=400
+            )
 
         return web.json_response(status=204)
 
@@ -381,9 +384,35 @@ class ChatMessageDetails(web.View):
           )
     @token_and_active_required
     async def delete(self):
-        chat_id = self.request.match_info.get('chat_id')
-        message_id = self.request.match_info.get('message_id')
-        print('chat.messages.details.delete.chat_id', chat_id)
-        print('chat.messages.details.delete.message_id', message_id)
+        # data = await self.request.json()
+        user = self.request['user']
+
+        request_message_id = int(self.request.match_info.get('message_id'))
+
+        user_message = await GroupMessage.query.where(
+            GroupMessage.id == request_message_id).gino.first()
+
+        if not user_message:
+            return web.json_response(
+                {'message': "Message not found. Incorrect id"},
+                status=403
+            )
+
+        if user.id != user_message.user_id:
+            return web.json_response(
+                {'message': "Changing another user's message is prohibited"},
+                status=403
+            )
+
+        try:
+            await GroupMessage.delete.where(
+                GroupMessage.id == request_message_id
+            ).gino.status()
+
+        except UniqueViolationError as ex:
+            return web.json_response(
+                {'message': ex.as_dict()['detail']},
+                status=400
+            )
 
         return web.json_response(status=204)
