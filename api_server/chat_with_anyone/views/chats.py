@@ -55,8 +55,14 @@ class Chats(web.View):
     @token_and_active_required
     async def post(self):
         data = await self.request.json()
-        await GroupRoom.create(
+        user = self.request["user"]
+        created_chat = await GroupRoom.create(
             name=data['name']
+        )
+
+        await GroupMembership.create(
+            room_id=created_chat.id,
+            user_id=user.id
         )
 
         return web.json_response(status=201)
