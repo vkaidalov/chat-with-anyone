@@ -309,28 +309,77 @@ class ChatMessages(web.View):
 
 
 class ChatMessageDetails(web.View):
-    @docs(tags=['message'], summary='Fetch message details')
-    @response_schema(MessageResponseSchema(), 200)
-    async def get(self):
-        chat_id = self.request.match_info.get('chat_id')
-        message_id = self.request.match_info.get('message_id')
-        print('chat.messages.details.get.chat_id', chat_id)
-        print('chat.messages.details.get.message_id', message_id)
+    # @docs(tags=['message'],
+    #       summary='Fetch message details',
+    #       parameters=[{
+    #           'in': 'header',
+    #           'name': 'Authorization',
+    #           'schema': {'type': 'string'},
+    #           'required': 'true'
+    #       }]
+    #       )
+    # @response_schema(MessageResponseSchema(), 200)
+    # @token_and_active_required
+    # async def get(self):
+    #     chat_id = self.request.match_info.get('chat_id')
+    #     message_id = self.request.match_info.get('message_id')
+    #     print('chat.messages.details.get.chat_id', chat_id)
+    #     print('chat.messages.details.get.message_id', message_id)
 
-        return web.json_response({})
+    #     return web.json_response({})
 
-    @docs(tags=['message'], summary='Update message details')
+    @docs(tags=['message'],
+          summary='Update message',
+          parameters=[{
+              'in': 'header',
+              'name': 'Authorization',
+              'schema': {'type': 'string'},
+              'required': 'true'
+          }]
+          )
     @request_schema(MessageRequestSchema(strict=True))
-    @response_schema(MessageResponseSchema(), 200)
+    # @response_schema(MessageResponseSchema(), 200)
+    @token_and_active_required
     async def patch(self):
-        chat_id = self.request.match_info.get('chat_id')
-        message_id = self.request.match_info.get('message_id')
-        print('chat.messages.details.patch.chat_id', chat_id)
-        print('chat.messages.details.patch.message_id', message_id)
+        data = await self.request.json()
+        user = self.request['user']
 
-        return web.json_response({})
+        request_message_id = int(self.request.match_info.get('message_id'))
 
-    @docs(tags=['message'], summary='Delete message')
+        # if user.id != (group_messges.user_id)
+        user_message = await GroupMessage.query.where(
+            GroupMessage.id == request_message_id).gino.all() # gino.first()
+
+        if not user_message:
+            return web.json_response(
+                {'message': "Message not found. Incorrect id"},
+                status=403
+            )
+
+        if user.id != user_message.user_id:
+            return web.json_response(
+                {'message': "Changing another user's message is prohibited"},
+                status=403
+            )
+
+        print('===========')
+        print(data)
+        print('===========')
+        print(user)
+        print('===========')
+
+        return web.json_response(status=204)
+
+    @docs(tags=['message'],
+          summary='Delete message',
+          parameters=[{
+              'in': 'header',
+              'name': 'Authorization',
+              'schema': {'type': 'string'},
+              'required': 'true'
+          }]
+          )
+    @token_and_active_required
     async def delete(self):
         chat_id = self.request.match_info.get('chat_id')
         message_id = self.request.match_info.get('message_id')
