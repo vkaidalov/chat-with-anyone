@@ -12,8 +12,9 @@ from ..models.group_room import GroupRoom
 
 
 class ChatRequestSchema(Schema):
-    name = fields.Str()
-    description = fields.Str()
+    name = fields.Str(
+        validate=validate.Length(max=200), required=True
+    )
 
 
 class ChatResponseSchema(Schema):
@@ -38,14 +39,33 @@ class MessageResponseSchema(Schema):
 
 
 class Chats(web.View):
-    @docs(tags=['chats'], summary='Create new chat')
+    @docs(
+        tags=['chats'],
+        summary='Create a new chat',
+        parameters=[
+            {
+                'in': 'header',
+                'name': 'Authorization',
+                'schema': {'type': 'string'},
+                'required': 'true'
+            }
+        ]
+    )
     @request_schema(ChatRequestSchema(strict=True))
-    @response_schema(ChatResponseSchema(), 200)
+    @token_and_active_required
     async def post(self):
         data = await self.request.json()
-        print('chats.post', data)
+        user = self.request["user"]
+        created_chat = await GroupRoom.create(
+            name=data['name']
+        )
 
-        return web.json_response({}, status=201)
+        await GroupMembership.create(
+            room_id=created_chat.id,
+            user_id=user.id
+        )
+
+        return web.json_response(status=201)
 
     @docs(
         tags=['chats'],
