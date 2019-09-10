@@ -309,25 +309,6 @@ class ChatMessages(web.View):
 
 
 class ChatMessageDetails(web.View):
-    # @docs(tags=['message'],
-    #       summary='Fetch message details',
-    #       parameters=[{
-    #           'in': 'header',
-    #           'name': 'Authorization',
-    #           'schema': {'type': 'string'},
-    #           'required': 'true'
-    #       }]
-    #       )
-    # @response_schema(MessageResponseSchema(), 200)
-    # @token_and_active_required
-    # async def get(self):
-    #     chat_id = self.request.match_info.get('chat_id')
-    #     message_id = self.request.match_info.get('message_id')
-    #     print('chat.messages.details.get.chat_id', chat_id)
-    #     print('chat.messages.details.get.message_id', message_id)
-
-    #     return web.json_response({})
-
     @docs(tags=['message'],
           summary='Update message',
           parameters=[{
