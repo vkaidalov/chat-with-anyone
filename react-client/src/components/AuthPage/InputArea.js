@@ -2,28 +2,25 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import './InputArea.css';
 
-function InputArea(props) {
+function InputArea({id, type, required, placeholder, label, onChange, value}) {
 
-    let label;
-
-    if (props.label) {
-        label = <label for={props.id}>{props.label}</label>
-        console.log(typeof(props.onChange))
-    };
-
-    return (
-        <div className="form__item input-field">
-          <input
-            id={props.id}
-            type={props.type}
-            className="validate"
-            required={props.required}
-            placeholder={props.placeholder}
-            value={value}
-            onChange={props.handleOnChange.bind(event, props.id)}/>
-          {label}
-        </div>
-    );
+  if (label) {
+      label = <label for={id}>{label}</label>
+  };
+  
+  return (
+      <div className="form__item input-field">
+        <input
+          id={id}
+          type={type}
+          className="validate"
+          required={required}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e, id)}/>
+        {label}
+      </div>
+  );
 }
 
 InputArea.propTypes = {

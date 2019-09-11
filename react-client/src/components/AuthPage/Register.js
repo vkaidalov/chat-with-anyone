@@ -1,35 +1,31 @@
-import React from 'react';
+import React, { setState } from 'react';
 import InputArea from './InputArea';
 import './LogIn.css';
 
 function Register(props) {
 
-    function submitHandler(event) {
-        event.preventDefault();
-        console.log('email:' + event.state.email);
-        console.log('password:' + event.state.password);
-    }
-
-
     return (
-        <form className='form' onSubmit={submitHandler}>
+        <form className='form' onSubmit={props.submitHandler}>
             <InputArea 
                 id='username'
                 type='text'
                 label='Username'
-                onChange={props.handleOnChange}/>
+                value={props.data.username}
+                onChange={props.onChangeHandler}/>
 
             <InputArea 
                 id='e-mail'
                 type='email'
                 label='E-mail'
-                onChange={props.handleOnChange} />
+                value={props.data.email}
+                onChange={props.onChangeHandler} />
 
             <InputArea 
                 id='password' 
                 type='password'
                 label='Password'
-                onChange={props.handleOnChange} />
+                value={props.data.password}
+                onChange={props.onChangeHandler} />
 
             <div>
             <button
