@@ -2,11 +2,14 @@ from aiohttp import web
 from aiohttp_apispec import docs, request_schema, response_schema
 from marshmallow import Schema, fields, validate
 from sqlalchemy import and_
+from gino.loader import ColumnLoader
 
 from ..models.group_room import GroupRoom
 from ..models.group_message import GroupMessage
 from ..models.group_membership import GroupMembership
+from ..models.user import User
 from ..decorators import token_and_active_required
+from ..db import db
 
 
 class ChatRequestSchema(Schema):
@@ -28,6 +31,7 @@ class MessageResponseSchema(Schema):
     id = fields.Int()
     text = fields.Str(validate=validate.Length(max=500), required=True)
     created_at = fields.DateTime()
+    username = fields.Str(validate=validate.Length(max=40), required=True)
 
 
 class Chats(web.View):
@@ -81,12 +85,20 @@ class ChatMessages(web.View):
                             "User is not in chat."}, status=403
             )
 
-        messages = await GroupMessage.query.where(
-            GroupMessage.room_id == int(chat_id)).gino.all()
+        query = GroupMessage.outerjoin(
+            User, onclause=(GroupMessage.user_id == User.id)
+        ).select().where(GroupMessage.room_id == int(chat_id))
+
+        messages = await query.gino.load((GroupMessage, User.username)).all()
 
         return web.json_response(
             MessageResponseSchema().dump(
-                [message.to_dict() for message in messages],
+                [{
+                    "id": message.id,
+                    "text": message.text,
+                    "created_at": message.created_at,
+                    "username": username
+                } for message, username in messages],
                 many=True
             ).data)
 
