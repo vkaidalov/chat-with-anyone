@@ -384,7 +384,7 @@ class PasswordChange(web.View):
             return web.json_response(
                 {
                     "message":
-                    "Requested user_id doesn`t correspond current user_id"
+                    "Requested user_id doesn't correspond current user_id"
                 },
                 status=403
             )
@@ -393,7 +393,7 @@ class PasswordChange(web.View):
 
         if not bcrypt.verify(data['old_password'], old_password):
             return web.json_response(
-                {"message": "The old password you entered doesn`t match"},
+                {"message": "The old password you entered doesn't match"},
                 status=403
             )
 

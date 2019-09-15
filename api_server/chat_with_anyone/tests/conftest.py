@@ -13,6 +13,7 @@ from ..routes import setup_routes
 from ..middlewares import setup_middlewares
 from ..db import db
 from ..models.user import User
+from ..models.contact import Contact
 
 BASE_DIR = pathlib.Path(__file__).parents[2]
 DEFAULT_CONFIG_PATH = BASE_DIR / 'config' / 'test_chat_with_anyone'
@@ -65,7 +66,7 @@ async def tables(gino_db):
 
 
 @pytest.fixture
-async def data(tables):
+async def user(tables):
     await User.create(
         username='test_data',
         email='test_data@gmail.com',
@@ -78,7 +79,7 @@ async def data(tables):
 
 
 @pytest.fixture
-async def additional_user(data):
+async def additional_user(user):
     await User.create(
         username='test_data2',
         email='test_data2@gmail.com',
@@ -87,4 +88,12 @@ async def additional_user(data):
         last_name='test_data2',
         token=TOKEN[::-1],
         is_active=True
+    )
+
+
+@pytest.fixture
+async def contact(additional_user):
+    await Contact.create(
+        owner_id=1,
+        contact_id=2
     )

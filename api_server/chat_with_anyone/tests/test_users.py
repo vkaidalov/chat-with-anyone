@@ -1,7 +1,7 @@
 from .conftest import TOKEN
 
 
-async def test_get_list_users(cli, data):
+async def test_get_list_users(cli, user):
     resp = await cli.get('/api/users/', headers={'Authorization': TOKEN})
     response_json = [{"id": 1, "username": "test_data",
                       "first_name": "test_data", "last_name": "test_data"}]
@@ -10,7 +10,7 @@ async def test_get_list_users(cli, data):
     assert await resp.json() == response_json
 
 
-async def test_get_list_users_with_param(cli, data):
+async def test_get_list_users_with_param(cli, user):
     response_json = [{"id": 1, "username": "test_data",
                       "first_name": "test_data", "last_name": "test_data"}]
 
@@ -59,6 +59,11 @@ async def test_get_list_users_with_param(cli, data):
     assert resp.status == 200
     assert await resp.json() == response_json
 
+    resp = await cli.get('/api/users/?page=2',
+                         headers={'Authorization': TOKEN})
+    assert resp.status == 200
+    assert await resp.json() == []
+
     # resp = await cli.get('/api/users/?page=-1',
     #                      headers={'Authorization': TOKEN})
     # assert resp.status == 200
@@ -70,7 +75,7 @@ async def test_get_list_users_with_param(cli, data):
     # assert await resp.json() == response_json
 
 
-async def test_get_user_detail(cli, data):
+async def test_get_user_detail(cli, user):
     resp = await cli.get('/api/users/1',
                          headers={'Authorization': TOKEN})
     response_json = {"id": 1, "username": "test_data",
@@ -86,7 +91,7 @@ async def test_get_user_detail(cli, data):
     assert await resp.text() == '{"message": "User not found."}'
 
 
-async def test_edit_user_profile(cli, data, additional_user):
+async def test_edit_user_profile(cli, user, additional_user):
     resp = await cli.patch('/api/users/1',
                            headers={'Authorization': TOKEN},
                            json={'username': 'test_value',
@@ -116,7 +121,7 @@ async def test_edit_user_profile(cli, data, additional_user):
                                 '(test_value) already exists."}'
 
 
-async def test_delete_user_profile(cli, data):
+async def test_delete_user_profile(cli, user):
     resp = await cli.delete('/api/users/2',
                             headers={'Authorization': TOKEN})
 
