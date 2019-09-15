@@ -75,3 +75,16 @@ async def data(tables):
         token=TOKEN,
         is_active=True
     )
+
+
+@pytest.fixture
+async def additional_user(data):
+    await User.create(
+        username='test_data2',
+        email='test_data2@gmail.com',
+        password=bcrypt.hash('test_data2'),
+        first_name='test_data2',
+        last_name='test_data2',
+        token=TOKEN[::-1],
+        is_active=True
+    )
