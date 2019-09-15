@@ -267,7 +267,6 @@ class ChatMessages(web.View):
         }]
     )
     @response_schema(MessageResponseSchema(many=True))
-    @response_schema(MessageResponseSchema())
     @token_and_active_required
     async def get(self):
         chat_id = self.request.match_info.get('chat_id')
