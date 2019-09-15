@@ -458,9 +458,7 @@ class UserChats(web.View):
         ).gino.all()
 
         return web.json_response(
-            UserChatsResponseSchema().dumps(
+            UserChatsResponseSchema().dump(
                 [chat.to_dict() for chat in user_chats],
                 many=True
-            ),
-            status=204
-        )
+            ).data)
