@@ -18,7 +18,7 @@ def setup_routes(app):
                 allow_head=False
                 ),
 
-        web.view(r'/api/users/{user_id:\d+}/user_chats/', UserChats),
+        web.view(r'/api/users/{user_id:\d+}/chats/', UserChats),
 
         web.view(r'/api/users/{user_id:\d+}/contacts/', ContactList),
         web.view(
