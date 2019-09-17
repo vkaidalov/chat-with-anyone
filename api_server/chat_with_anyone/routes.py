@@ -5,7 +5,7 @@ from .views.chats import (ChatMessageDetails, ChatMessages, Chats,
                           ChatUserDetails, ChatUserList)
 from .views.email_confirmation import email_token_confirmation
 from .views.users import (ContactDetail, ContactList, PasswordChange,
-                          UserDetail, UserList)
+                          UserChats, UserDetail, UserList)
 
 
 def setup_routes(app):
@@ -26,6 +26,7 @@ def setup_routes(app):
 
         web.view(r'/api/users/', UserList),
         web.view(r'/api/users/{user_id:\d+}', UserDetail),
+        web.view(r'/api/users/{user_id:\d+}/chats/', UserChats),
 
         web.view(r'/api/users/{user_id:\d+}/change-password', PasswordChange),
 
