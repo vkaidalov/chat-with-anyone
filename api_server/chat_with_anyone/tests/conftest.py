@@ -33,9 +33,6 @@ def create_config(argv=None):
 
     config = commandline.config_from_options(options, TRAFARET)
 
-    if os.getenv('USE_DOCKER'):
-        config['postgres']['host'] = 'chat-database'
-
     return config
 
 
