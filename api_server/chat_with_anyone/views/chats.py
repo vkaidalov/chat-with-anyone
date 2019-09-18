@@ -9,6 +9,7 @@ from ..decorators import token_and_active_required
 from ..models.group_membership import GroupMembership
 from ..models.group_message import GroupMessage
 from ..models.group_room import GroupRoom
+from ..models.user import User
 
 
 class ChatRequestSchema(Schema):
@@ -36,6 +37,7 @@ class MessageResponseSchema(Schema):
     id = fields.Int()
     text = fields.Str(validate=validate.Length(max=500), required=True)
     created_at = fields.DateTime()
+    username = fields.Str(validate=validate.Length(max=40), required=True)
 
 
 class Chats(web.View):
@@ -265,7 +267,6 @@ class ChatMessages(web.View):
         }]
     )
     @response_schema(MessageResponseSchema(many=True))
-    @response_schema(MessageResponseSchema())
     @token_and_active_required
     async def get(self):
         chat_id = self.request.match_info.get('chat_id')
@@ -285,12 +286,20 @@ class ChatMessages(web.View):
                             "User is not in chat."}, status=403
             )
 
-        messages = await GroupMessage.query.where(
-            GroupMessage.room_id == int(chat_id)).gino.all()
+        query = GroupMessage.outerjoin(
+            User, onclause=(GroupMessage.user_id == User.id)
+        ).select().where(GroupMessage.room_id == int(chat_id))
+
+        messages = await query.gino.load((GroupMessage, User.username)).all()
 
         return web.json_response(
             MessageResponseSchema().dump(
-                [message.to_dict() for message in messages],
+                [{
+                    "id": message.id,
+                    "text": message.text,
+                    "created_at": message.created_at,
+                    "username": username
+                } for message, username in messages],
                 many=True
             ).data)
 
@@ -329,32 +338,90 @@ class ChatMessages(web.View):
 
 
 class ChatMessageDetails(web.View):
-    @docs(tags=['message'], summary='Fetch message details')
-    @response_schema(MessageResponseSchema(), 200)
-    async def get(self):
-        chat_id = self.request.match_info.get('chat_id')
-        message_id = self.request.match_info.get('message_id')
-        print('chat.messages.details.get.chat_id', chat_id)
-        print('chat.messages.details.get.message_id', message_id)
-
-        return web.json_response({})
-
-    @docs(tags=['message'], summary='Update message details')
+    @docs(tags=['message'],
+          summary='Update message',
+          parameters=[{
+              'in': 'header',
+              'name': 'Authorization',
+              'schema': {'type': 'string'},
+              'required': 'true'
+          }]
+          )
     @request_schema(MessageRequestSchema(strict=True))
-    @response_schema(MessageResponseSchema(), 200)
+    @token_and_active_required
     async def patch(self):
-        chat_id = self.request.match_info.get('chat_id')
-        message_id = self.request.match_info.get('message_id')
-        print('chat.messages.details.patch.chat_id', chat_id)
-        print('chat.messages.details.patch.message_id', message_id)
+        data = await self.request.json()
+        user = self.request['user']
 
-        return web.json_response({})
+        request_message_id = int(self.request.match_info.get('message_id'))
 
-    @docs(tags=['message'], summary='Delete message')
+        user_message = await GroupMessage.query.where(
+            GroupMessage.id == request_message_id).gino.first()
+
+        if not user_message:
+            return web.json_response(
+                {'message': "Message not found. Incorrect id"},
+                status=403
+            )
+
+        if user.id != user_message.user_id:
+            return web.json_response(
+                {'message': "Changing another user's message is prohibited"},
+                status=403
+            )
+
+        try:
+            await user_message.update(
+                text=data['text']
+            ).apply()
+
+        except UniqueViolationError as ex:
+            return web.json_response(
+                {'message': ex.as_dict()['detail']},
+                status=400
+            )
+
+        return web.json_response(status=204)
+
+    @docs(tags=['message'],
+          summary='Delete message',
+          parameters=[{
+              'in': 'header',
+              'name': 'Authorization',
+              'schema': {'type': 'string'},
+              'required': 'true'
+          }]
+          )
+    @token_and_active_required
     async def delete(self):
-        chat_id = self.request.match_info.get('chat_id')
-        message_id = self.request.match_info.get('message_id')
-        print('chat.messages.details.delete.chat_id', chat_id)
-        print('chat.messages.details.delete.message_id', message_id)
+        user = self.request['user']
+
+        request_message_id = int(self.request.match_info.get('message_id'))
+
+        user_message = await GroupMessage.query.where(
+            GroupMessage.id == request_message_id).gino.first()
+
+        if not user_message:
+            return web.json_response(
+                {'message': "Message not found. Incorrect id"},
+                status=403
+            )
+
+        if user.id != user_message.user_id:
+            return web.json_response(
+                {'message': "Deleting another user's message is prohibited"},
+                status=403
+            )
+
+        try:
+            await GroupMessage.delete.where(
+                GroupMessage.id == request_message_id
+            ).gino.status()
+
+        except UniqueViolationError as ex:
+            return web.json_response(
+                {'message': ex.as_dict()['detail']},
+                status=400
+            )
 
         return web.json_response(status=204)
