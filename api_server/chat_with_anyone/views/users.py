@@ -122,8 +122,10 @@ class UserList(web.View):
             page = 1
             page_size = 10
 
-        # one page pagination limit
-        if page_size > 50:
+        if page < 1 or page > 50:
+            page = 50
+
+        if page_size < 1 or page_size > 50:
             page_size = 50
 
         username = query.get('username')
