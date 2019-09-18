@@ -72,8 +72,7 @@ class UserChatsResponseSchema(Schema):
     name = fields.Str(
         validate=validate.Length(max=200), required=True
     )
-    last_message_at = fields.DateTime(required=True
-                                      )
+    last_message_at = fields.DateTime(required=True)
 
 
 class UserList(web.View):
