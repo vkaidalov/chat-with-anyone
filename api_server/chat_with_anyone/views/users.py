@@ -1,10 +1,13 @@
+from datetime import datetime
+
 from aiohttp import web
 from aiohttp_apispec import docs, marshal_with, request_schema, response_schema
 from asyncpg import ForeignKeyViolationError, UniqueViolationError
 from marshmallow import Schema, fields, validate
 from passlib.hash import bcrypt
-from sqlalchemy import and_
+from sqlalchemy import and_, desc
 
+from api_server.chat_with_anyone.models.group_message import GroupMessage
 from ..decorators import token_and_active_required
 from ..models.contact import Contact
 from ..models.group_membership import GroupMembership
@@ -453,8 +456,17 @@ class UserChats(web.View):
                 GroupRoom.id == GroupMembership.room_id)
         ).select().where(User.id == request_user_id)
 
+        print(query)
+
+        ins_query = query.insert().values(
+            GroupRoom.last_message_at == GroupMessage.query.order_by(desc(GroupMessage.created_at)).gino.iterate()
+        )
+
         users = await query.gino.load(
             User.distinct(User.id).load(add_room=GroupRoom)).all()
+
+        for _ in users[0].rooms:
+            print(_.to_dict())
 
         return web.json_response(
             UserChatsResponseSchema().dump(
