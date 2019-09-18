@@ -68,7 +68,7 @@ class PasswordChangeRequestSchema(Schema):
 
 class UserList(web.View):
     @docs(
-        tags=['User'],
+        tags=['Users'],
         summary="Return all users.",
         parameters=[
             {
@@ -145,8 +145,8 @@ class UserList(web.View):
 
 class UserDetail(web.View):
     @docs(
-        tags=['User'],
-        summary='Fetch profile details by id',
+        tags=['Users'],
+        summary='Fetch profile details by id.',
         parameters=[{
             'in': 'header',
             'name': 'Authorization',
@@ -170,8 +170,8 @@ class UserDetail(web.View):
         )
 
     @docs(
-        tags=['User'],
-        summary='Edit my profile details',
+        tags=['Users'],
+        summary='Edit my profile details.',
         parameters=[{
             'in': 'header',
             'name': 'Authorization',
@@ -206,8 +206,8 @@ class UserDetail(web.View):
         return web.json_response(status=204)
 
     @docs(
-        tags=['User'],
-        summary='Delete my profile',
+        tags=['Users'],
+        summary='Delete my profile.',
         parameters=[{
             'in': 'header',
             'name': 'Authorization',
@@ -356,8 +356,8 @@ class ContactDetail(web.View):
 
 class PasswordChange(web.View):
     @docs(
-        tags=['PasswordChange'],
-        summary='Change user`s password',
+        tags=['Auth'],
+        summary="Change user's password.",
         parameters=[{
             'in': 'header',
             'name': 'Authorization',

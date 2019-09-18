@@ -42,8 +42,8 @@ class MessageResponseSchema(Schema):
 
 class Chats(web.View):
     @docs(
-        tags=['chats'],
-        summary='Create a new chat',
+        tags=['Chats'],
+        summary='Create a new chat.',
         parameters=[
             {
                 'in': 'header',
@@ -70,8 +70,8 @@ class Chats(web.View):
         return web.json_response(status=201)
 
     @docs(
-        tags=['chats'],
-        summary='Fetch list of chats',
+        tags=['Chats'],
+        summary='Fetch list of chats.',
         parameters=[
             {
                 'in': 'header',
@@ -130,8 +130,8 @@ class Chats(web.View):
 
 class ChatUserList(web.View):
     @docs(
-        tags=['chats'],
-        summary='Add user into chat',
+        tags=['Chats'],
+        summary='Add user into chat.',
         parameters=[{
             'in': 'header',
             'name': 'Authorization',
@@ -191,8 +191,8 @@ class ChatUserList(web.View):
 
 class ChatUserDetails(web.View):
     @docs(
-        tags=['chats'],
-        summary='Delete from chats',
+        tags=['Chats'],
+        summary='Remove a user from a chat.',
         parameters=[{
             'in': 'header',
             'name': 'Authorization',
@@ -257,8 +257,8 @@ class ChatUserDetails(web.View):
 
 class ChatMessages(web.View):
     @docs(
-        tags=['message'],
-        summary='Fetch all message in chat',
+        tags=['Messages'],
+        summary='Fetch all messages in a chat.',
         parameters=[{
             'in': 'header',
             'name': 'Authorization',
@@ -304,8 +304,8 @@ class ChatMessages(web.View):
             ).data)
 
     @docs(
-        tags=['message'],
-        summary='Create new message',
+        tags=['Messages'],
+        summary='Create a new message.',
         parameters=[{
             'in': 'header',
             'name': 'Authorization',
@@ -338,8 +338,8 @@ class ChatMessages(web.View):
 
 
 class ChatMessageDetails(web.View):
-    @docs(tags=['message'],
-          summary='Update message',
+    @docs(tags=['Messages'],
+          summary='Update a message.',
           parameters=[{
               'in': 'header',
               'name': 'Authorization',
@@ -383,8 +383,8 @@ class ChatMessageDetails(web.View):
 
         return web.json_response(status=204)
 
-    @docs(tags=['message'],
-          summary='Delete message',
+    @docs(tags=['Messages'],
+          summary='Delete a message.',
           parameters=[{
               'in': 'header',
               'name': 'Authorization',
