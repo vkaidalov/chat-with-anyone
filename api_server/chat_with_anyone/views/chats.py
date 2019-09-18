@@ -394,7 +394,6 @@ class ChatMessageDetails(web.View):
           )
     @token_and_active_required
     async def delete(self):
-        # data = await self.request.json()
         user = self.request['user']
 
         request_message_id = int(self.request.match_info.get('message_id'))
@@ -410,7 +409,7 @@ class ChatMessageDetails(web.View):
 
         if user.id != user_message.user_id:
             return web.json_response(
-                {'message': "Changing another user's message is prohibited"},
+                {'message': "Deleting another user's message is prohibited"},
                 status=403
             )
 
