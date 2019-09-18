@@ -69,6 +69,7 @@ class PasswordChangeRequestSchema(Schema):
 class UserChatsResponseSchema(Schema):
     id = fields.Int()
     name = fields.Str()
+    last_message_at = fields.DateTime()
 
 
 class UserList(web.View):
