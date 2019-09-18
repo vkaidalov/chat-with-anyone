@@ -20,12 +20,22 @@ class User(db.Model):
     def __init__(self, **kw):
         super().__init__(**kw)
         self._contacts = set()
+        self._rooms = set()
 
     @property
     def contacts(self):
         return self._contacts
 
+    @property
+    def rooms(self):
+        return self._rooms
+
     @contacts.setter
     def add_contact(self, user):
         self._contacts.add(user)
         user._contacts.add(self)
+
+    @rooms.setter
+    def add_room(self, room):
+        self._rooms.add(room)
+        room._members.add(self)
