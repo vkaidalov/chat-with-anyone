@@ -2,6 +2,7 @@ from aiohttp import web
 from aiohttp_apispec import (
     docs, request_schema, response_schema, marshal_with
 )
+from aiohttp_cors import CorsViewMixin
 from asyncpg import ForeignKeyViolationError, UniqueViolationError
 from marshmallow import Schema, fields, validate
 from sqlalchemy import and_
@@ -66,7 +67,7 @@ class PasswordChangeRequestSchema(Schema):
     )
 
 
-class UserList(web.View):
+class UserList(web.View, CorsViewMixin):
     @docs(
         tags=['Users'],
         summary="Return all users.",
@@ -143,7 +144,7 @@ class UserList(web.View):
             ).data)
 
 
-class UserDetail(web.View):
+class UserDetail(web.View, CorsViewMixin):
     @docs(
         tags=['Users'],
         summary='Fetch profile details by id.',
@@ -229,7 +230,7 @@ class UserDetail(web.View):
         return web.json_response(status=204)
 
 
-class ContactList(web.View):
+class ContactList(web.View, CorsViewMixin):
     @docs(
         tags=['Contacts'],
         summary='Create a new contact.',
@@ -307,7 +308,7 @@ class ContactList(web.View):
             ).data)
 
 
-class ContactDetail(web.View):
+class ContactDetail(web.View, CorsViewMixin):
     @docs(
         tags=['Contacts'],
         summary='Delete the specified contact.',
@@ -354,7 +355,7 @@ class ContactDetail(web.View):
         return web.json_response(status=204)
 
 
-class PasswordChange(web.View):
+class PasswordChange(web.View, CorsViewMixin):
     @docs(
         tags=['Auth'],
         summary="Change user's password.",

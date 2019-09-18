@@ -1,5 +1,6 @@
 from aiohttp import web
 from aiohttp_apispec import docs, request_schema, response_schema
+from aiohttp_cors import CorsViewMixin
 from asyncpg import ForeignKeyViolationError, UniqueViolationError
 from marshmallow import Schema, fields, validate
 from sqlalchemy import and_
@@ -40,7 +41,7 @@ class MessageResponseSchema(Schema):
     username = fields.Str(validate=validate.Length(max=40), required=True)
 
 
-class Chats(web.View):
+class Chats(web.View, CorsViewMixin):
     @docs(
         tags=['Chats'],
         summary='Create a new chat.',
@@ -128,7 +129,7 @@ class Chats(web.View):
             ).data)
 
 
-class ChatUserList(web.View):
+class ChatUserList(web.View, CorsViewMixin):
     @docs(
         tags=['Chats'],
         summary='Add user into chat.',
@@ -189,7 +190,7 @@ class ChatUserList(web.View):
         return web.json_response(status=201)
 
 
-class ChatUserDetails(web.View):
+class ChatUserDetails(web.View, CorsViewMixin):
     @docs(
         tags=['Chats'],
         summary='Remove a user from a chat.',
@@ -255,7 +256,7 @@ class ChatUserDetails(web.View):
         return web.json_response(status=204)
 
 
-class ChatMessages(web.View):
+class ChatMessages(web.View, CorsViewMixin):
     @docs(
         tags=['Messages'],
         summary='Fetch all messages in a chat.',
@@ -337,7 +338,7 @@ class ChatMessages(web.View):
         return web.json_response(status=201)
 
 
-class ChatMessageDetails(web.View):
+class ChatMessageDetails(web.View, CorsViewMixin):
     @docs(tags=['Messages'],
           summary='Update a message.',
           parameters=[{
