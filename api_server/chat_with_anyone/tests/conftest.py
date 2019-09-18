@@ -1,14 +1,13 @@
 import argparse
-import os
 
 import pathlib
 import pytest
 from trafaret_config import commandline
-from utils import TRAFARET
 from aiohttp import web
 from aiohttp_apispec import setup_aiohttp_apispec
 from passlib.hash import bcrypt
 
+from utils import TRAFARET
 from ..routes import setup_routes
 from ..middlewares import setup_middlewares
 from ..db import db
