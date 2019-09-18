@@ -1,15 +1,15 @@
 from aiohttp import web
-from aiohttp_apispec import (
-    docs, request_schema, response_schema, marshal_with
-)
+from aiohttp_apispec import docs, marshal_with, request_schema, response_schema
 from asyncpg import ForeignKeyViolationError, UniqueViolationError
 from marshmallow import Schema, fields, validate
-from sqlalchemy import and_
 from passlib.hash import bcrypt
+from sqlalchemy import and_
 
-from ..models.user import User
-from ..models.contact import Contact
 from ..decorators import token_and_active_required
+from ..models.contact import Contact
+from ..models.group_membership import GroupMembership
+from ..models.group_room import GroupRoom
+from ..models.user import User
 
 
 class UserRequestSchema(Schema):
@@ -64,6 +64,12 @@ class PasswordChangeRequestSchema(Schema):
     new_password_repeat = fields.Str(
         validate=validate.Length(max=255), required=True
     )
+
+
+class UserChatsResponseSchema(Schema):
+    id = fields.Int()
+    name = fields.Str()
+    last_message_at = fields.DateTime()
 
 
 class UserList(web.View):
@@ -415,3 +421,43 @@ class PasswordChange(web.View):
             )
 
         return web.json_response(status=204)
+
+
+class UserChats(web.View):
+    @docs(
+        tags=['User Chats'],
+        summary="Get a list of a user's chats",
+        parameters=[{
+            'in': 'header',
+            'name': 'Authorization',
+            'schema': {'type': 'string'},
+            'required': 'true'
+        }]
+    )
+    @response_schema(UserChatsResponseSchema())
+    @token_and_active_required
+    async def get(self):
+        user = self.request["user"]
+        request_user_id = int(self.request.match_info.get('user_id'))
+
+        if user.id != request_user_id:
+            return web.json_response(
+                {"message": "Getting other's chats list is forbidden."},
+                status=403
+            )
+
+        query = User.outerjoin(
+            GroupMembership, onclause=(User.id == GroupMembership.user_id)
+        ).outerjoin(
+            GroupRoom, onclause=(
+                GroupRoom.id == GroupMembership.room_id)
+        ).select().where(User.id == request_user_id)
+
+        users = await query.gino.load(
+            User.distinct(User.id).load(add_room=GroupRoom)).all()
+
+        return web.json_response(
+            UserChatsResponseSchema().dump(
+                [room.to_dict() for room in users[0].rooms],
+                many=True
+            ).data)
