@@ -94,7 +94,7 @@ async def test_get_user_detail(cli, user):
 async def test_edit_user_profile(cli, user, additional_user):
     resp = await cli.patch('/api/users/1',
                            headers={'Authorization': TOKEN},
-                           json={'username': 'test_value',
+                           json={"username": "test_value",
                                  "first_name": "test_value",
                                  "last_name": "test_value"})
 
@@ -102,7 +102,7 @@ async def test_edit_user_profile(cli, user, additional_user):
 
     resp = await cli.patch('/api/users/2',
                            headers={'Authorization': TOKEN},
-                           json={'username': 'test_value',
+                           json={"username": "test_value",
                                  "first_name": "test_value",
                                  "last_name": "test_value"})
 
@@ -112,7 +112,7 @@ async def test_edit_user_profile(cli, user, additional_user):
 
     resp = await cli.patch('/api/users/2',
                            headers={'Authorization': TOKEN[::-1]},
-                           json={'username': 'test_value',
+                           json={"username": "test_value",
                                  "first_name": "test_value",
                                  "last_name": "test_value"})
 
@@ -133,3 +133,51 @@ async def test_delete_user_profile(cli, user):
                             headers={'Authorization': TOKEN})
 
     assert resp.status == 204
+
+
+async def test_change_password(cli, user, additional_user):
+    resp = await cli.patch('/api/users/1/change-password',
+                           headers={'Authorization': TOKEN},
+                           json={"old_password": "test_data",
+                                 "new_password": "test_value",
+                                 "new_password_repeat": "test_wrong_value"})
+
+    assert resp.status == 403
+    assert await resp.text() == '{"message": "Passwords do not match"}'
+
+    resp = await cli.patch('/api/users/1/change-password',
+                           headers={'Authorization': TOKEN},
+                           json={"old_password": "test_value",
+                                 "new_password": "test_value",
+                                 "new_password_repeat": "test_value"})
+
+    assert resp.status == 403
+    assert await resp.text() == '{"message": "The old password ' \
+                                'you entered doesn\'t match"}'
+
+    resp = await cli.patch('/api/users/1/change-password',
+                           headers={'Authorization': TOKEN},
+                           json={"old_password": "test_data",
+                                 "new_password": "test_value",
+                                 "new_password_repeat": "test_value"})
+
+    assert resp.status == 204
+
+    resp = await cli.patch('/api/users/3/change-password',
+                           headers={'Authorization': TOKEN},
+                           json={"old_password": "test_data",
+                                 "new_password": "test_value",
+                                 "new_password_repeat": "test_value"})
+
+    assert resp.status == 404
+    assert await resp.text() == '{"message": "User not found"}'
+
+    resp = await cli.patch('/api/users/2/change-password',
+                           headers={'Authorization': TOKEN},
+                           json={"old_password": "test_data",
+                                 "new_password": "test_value",
+                                 "new_password_repeat": "test_value"})
+
+    assert resp.status == 403
+    assert await resp.text() == '{"message": "Requested user_id doesn\'t ' \
+                                'correspond current user_id"}'

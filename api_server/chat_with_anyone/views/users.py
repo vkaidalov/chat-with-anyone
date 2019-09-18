@@ -377,7 +377,7 @@ class PasswordChange(web.View):
         if not request_user:
             return web.json_response(
                 {"message": "User not found"},
-                status=401
+                status=404
             )
 
         if user.id != request_user_id:
