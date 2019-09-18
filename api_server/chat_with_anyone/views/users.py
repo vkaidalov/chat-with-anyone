@@ -68,13 +68,6 @@ class PasswordChangeRequestSchema(Schema):
     )
 
 
-class UserChatsResponseSchema(Schema):
-    name = fields.Str(
-        validate=validate.Length(max=200), required=True
-    )
-    last_message_at = fields.DateTime(required=True)
-
-
 class UserList(web.View):
     @docs(
         tags=['User'],
@@ -424,40 +417,3 @@ class PasswordChange(web.View):
             )
 
         return web.json_response(status=204)
-
-
-class UserChats(web.View):
-    @docs(
-        tags=['User Chats'],
-        summary="Get a list of a user's chats.",
-        parameters=[{
-            'in': 'header',
-            'name': 'Authorization',
-            'schema': {'type': 'string'},
-            'required': 'true'
-        }]
-    )
-    @marshal_with(UserChatsResponseSchema(many=True))
-    @token_and_active_required
-    async def get(self):
-        user = self.request["user"]
-        request_user_id = int(self.request.match_info.get('user_id'))
-
-        if user.id != request_user_id:
-            return web.json_response(
-                {"message": "Getting other's chats list is forbidden."},
-                status=403
-            )
-
-        user_chats = await GroupRoom.query.where(
-            and_(
-                GroupMembership.user_id == request_user_id,
-                GroupMembership.room_id == GroupRoom.id
-            )
-        ).gino.all()
-
-        return web.json_response(
-            UserChatsResponseSchema().dump(
-                [chat.to_dict() for chat in user_chats],
-                many=True
-            ).data)
