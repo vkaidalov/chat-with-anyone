@@ -9,8 +9,6 @@ from passlib.hash import bcrypt
 
 from ..models.user import User
 from ..models.contact import Contact
-from ..models.group_room import GroupRoom
-from ..models.group_membership import GroupMembership
 from ..decorators import token_and_active_required
 
 
