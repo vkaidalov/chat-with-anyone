@@ -109,7 +109,10 @@ class Chats(web.View, CorsViewMixin):
             page = 1
             page_size = 10
 
-        if page_size > 50:
+        if page < 1 or page > 50:
+            page = 50
+
+        if page_size < 1 or page_size > 50:
             page_size = 50
 
         name = query.get('name')
