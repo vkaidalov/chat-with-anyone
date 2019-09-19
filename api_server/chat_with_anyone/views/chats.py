@@ -329,11 +329,18 @@ class ChatMessages(web.View, CorsViewMixin):
                             "User is not in chat."}, status=403
             )
 
-        await GroupMessage.create(
+        message = await GroupMessage.create(
             text=self.request["data"]["text"],
             room_id=int(chat_id),
             user_id=user.id
         )
+
+        await GroupRoom\
+            .update\
+            .values(last_message_at=message.created_at)\
+            .where(GroupRoom.id == int(chat_id))\
+            .gino\
+            .status()
 
         return web.json_response(status=201)
 
