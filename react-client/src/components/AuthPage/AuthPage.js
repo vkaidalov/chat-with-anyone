@@ -19,20 +19,21 @@ function AuthPage(props) {
     }
 
     function submitHandler(event) {
+        event.preventDefault();
+        
         let body = {
-            'username': event.target[0].value,
+            'username': event.target.username.value,
             'email': event.target[1].value,
             'password': event.target[2].value
         };
-        event.preventDefault();
 
         const xhr = new XMLHttpRequest()
         xhr.addEventListener('load', () => {
             console.log(xhr.responseText)
         })
-        xhr.open('POST', 'https://http://localhost:8000/api/signup')
+        xhr.open('POST', 'http://localhost:8000/api/signup')
         xhr.withCredentials = true;
-        xhr.setRequestHeader("Acces-Control-Allow-Origin", "*");
+        xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
         xhr.setRequestHeader(
             "Acces-Control-Allow-Headers",
             "Origin, X-Requested-With, Content-Type, Accept");

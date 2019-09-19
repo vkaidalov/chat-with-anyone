@@ -10,6 +10,7 @@ function Register(props) {
                 id='username'
                 type='text'
                 label='Username'
+                name='username'
                 value={props.data.username}
                 onChange={props.onChangeHandler}/>
 

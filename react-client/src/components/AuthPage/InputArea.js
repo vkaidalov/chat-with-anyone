@@ -5,8 +5,8 @@ import './InputArea.css';
 function InputArea({id, type, required, placeholder, label, onChange, value}) {
 
   if (label) {
-      label = <label for={id}>{label}</label>
-  };
+      label = <label for={id}>{label}</label>;
+  }
   
   return (
       <div className="form__item input-field">
