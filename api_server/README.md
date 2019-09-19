@@ -92,6 +92,15 @@ alembic revision -m "<Message for migration>" --autogenerate --head head
 
 ## Running tests
 
+Create the test database, then quit from the shell:
+
+```sql
+CREATE DATABASE test_chat_with_anyone;
+\q
+```
+
+Running pytest:
+
 ```bash
 pytest
 ```
