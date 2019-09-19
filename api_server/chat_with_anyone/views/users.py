@@ -1,5 +1,8 @@
 from aiohttp import web
-from aiohttp_apispec import docs, marshal_with, request_schema, response_schema
+from aiohttp_apispec import (
+    docs, request_schema, response_schema, marshal_with
+)
+from aiohttp_cors import CorsViewMixin
 from asyncpg import ForeignKeyViolationError, UniqueViolationError
 from marshmallow import Schema, fields, validate
 from passlib.hash import bcrypt
@@ -72,9 +75,9 @@ class UserChatsResponseSchema(Schema):
     last_message_at = fields.DateTime()
 
 
-class UserList(web.View):
+class UserList(web.View, CorsViewMixin):
     @docs(
-        tags=['User'],
+        tags=['Users'],
         summary="Return all users.",
         parameters=[
             {
@@ -149,10 +152,10 @@ class UserList(web.View):
             ).data)
 
 
-class UserDetail(web.View):
+class UserDetail(web.View, CorsViewMixin):
     @docs(
-        tags=['User'],
-        summary='Fetch profile details by id',
+        tags=['Users'],
+        summary='Fetch profile details by id.',
         parameters=[{
             'in': 'header',
             'name': 'Authorization',
@@ -176,8 +179,8 @@ class UserDetail(web.View):
         )
 
     @docs(
-        tags=['User'],
-        summary='Edit my profile details',
+        tags=['Users'],
+        summary='Edit my profile details.',
         parameters=[{
             'in': 'header',
             'name': 'Authorization',
@@ -212,8 +215,8 @@ class UserDetail(web.View):
         return web.json_response(status=204)
 
     @docs(
-        tags=['User'],
-        summary='Delete my profile',
+        tags=['Users'],
+        summary='Delete my profile.',
         parameters=[{
             'in': 'header',
             'name': 'Authorization',
@@ -235,7 +238,7 @@ class UserDetail(web.View):
         return web.json_response(status=204)
 
 
-class ContactList(web.View):
+class ContactList(web.View, CorsViewMixin):
     @docs(
         tags=['Contacts'],
         summary='Create a new contact.',
@@ -313,7 +316,7 @@ class ContactList(web.View):
             ).data)
 
 
-class ContactDetail(web.View):
+class ContactDetail(web.View, CorsViewMixin):
     @docs(
         tags=['Contacts'],
         summary='Delete the specified contact.',
@@ -360,10 +363,10 @@ class ContactDetail(web.View):
         return web.json_response(status=204)
 
 
-class PasswordChange(web.View):
+class PasswordChange(web.View, CorsViewMixin):
     @docs(
-        tags=['PasswordChange'],
-        summary='Change user`s password',
+        tags=['Auth'],
+        summary="Change user's password.",
         parameters=[{
             'in': 'header',
             'name': 'Authorization',
@@ -423,10 +426,10 @@ class PasswordChange(web.View):
         return web.json_response(status=204)
 
 
-class UserChats(web.View):
+class UserChats(web.View, CorsViewMixin):
     @docs(
-        tags=['User Chats'],
-        summary="Get a list of a user's chats",
+        tags=['Chats'],
+        summary="Get a list of a user's chats.",
         parameters=[{
             'in': 'header',
             'name': 'Authorization',

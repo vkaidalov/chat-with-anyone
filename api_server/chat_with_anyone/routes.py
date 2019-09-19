@@ -1,11 +1,11 @@
 from aiohttp import web
 
 from .views.auth import sign_in, sign_out, sign_up
-from .views.chats import (ChatMessageDetails, ChatMessages, Chats,
-                          ChatUserDetails, ChatUserList)
 from .views.email_confirmation import email_token_confirmation
 from .views.users import (ContactDetail, ContactList, PasswordChange,
                           UserChats, UserDetail, UserList)
+from .views.chats import (ChatMessageDetails, ChatMessages, Chats,
+                          ChatUserDetails, ChatUserList)
 
 
 def setup_routes(app):
@@ -14,9 +14,13 @@ def setup_routes(app):
         web.post('/api/sign-in', sign_in),
         web.post(r'/api/users/{user_id:\d+}/sign-out', sign_out),
 
+        web.view(r'/api/users/{user_id:\d+}/change-password', PasswordChange),
         web.get(r'/api/email-confirmation/{token}', email_token_confirmation,
                 allow_head=False
                 ),
+
+        web.view(r'/api/users/', UserList),
+        web.view(r'/api/users/{user_id:\d+}', UserDetail),
 
         web.view(r'/api/users/{user_id:\d+}/contacts/', ContactList),
         web.view(
@@ -24,11 +28,7 @@ def setup_routes(app):
             ContactDetail
         ),
 
-        web.view(r'/api/users/', UserList),
-        web.view(r'/api/users/{user_id:\d+}', UserDetail),
         web.view(r'/api/users/{user_id:\d+}/chats/', UserChats),
-
-        web.view(r'/api/users/{user_id:\d+}/change-password', PasswordChange),
 
         web.view('/api/chats/', Chats),
         web.view(r'/api/chats/{chat_id:\d+}/users/', ChatUserList),
