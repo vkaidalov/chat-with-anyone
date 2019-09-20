@@ -1,15 +1,14 @@
 import React from "react";
 import {Link} from "react-router-dom";
 
+import UserIcon from "./user-icon.png";
 import "./SignInSignUpPage.css";
 
 function SignInPage() {
     return (
         <div className="wrapper">
             <div className="user-icon">
-                <img
-                    src="https://github.com/hesoyam11/chat-with-anyone/raw/feature-front-end-register/react-client/src/assets/img/user-icon.png"
-                    alt=""/>
+                <img src={UserIcon} alt=""/>
             </div>
 
             <form className="form">

@@ -6,10 +6,6 @@ import SignUpPage from "./SignUpPage";
 import HomePage from "./HomePage";
 
 class App extends React.Component {
-    constructor(props) {
-        super(props);
-    }
-
     render() {
         return (
             <Router>
