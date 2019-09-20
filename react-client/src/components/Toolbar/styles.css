@@ -1,0 +1,75 @@
+.toolbar__wrapper {
+    display: flex;
+    position: relative;
+    width: 100%;
+    height: 60px;
+    background-color: #fff;
+    border-radius: 6px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+.shadow {
+    box-shadow: 0px 30px 6px -20px rgba(0, 0, 0, 0.2),
+        0 0px 2px 0 rgba(0, 0, 0, 0.2);
+    transform: translateY(4px);
+    transition: all 0.25s ease-in-out;
+}
+
+.toolbar__selected-line {
+    position: absolute;
+    width: calc(50% - 50px);
+    border-radius: 6px;
+    border: 1px solid #90f0ce;
+    background-color: #90f0ce;
+    top: 66%;
+    height: 3px;
+    box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.2),
+        0 0px 2px 0 rgba(0, 0, 0, 0.2);
+    transition: all 200ms ease-out;
+    background-color: #90f0ce;
+    transform: translate3d(25px, 0, 0);
+}
+
+.toolbar__item {
+    padding: 4px 0;
+    flex: 1 1 250px;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 200ms ease-out;
+}
+
+.toolbar__item_label {
+    text-align: center;
+    vertical-align: middle;
+    box-sizing: border-box;
+    border-right: 2px solid #d9d8e2;
+    width: 100%;
+    height: 88%;
+}
+.toolbar__item_label > span {
+    position: relative;
+    top: 25%;
+    font-family: Lato;
+    font-weight: bold;
+    font-size: 18px;
+    color: #707c97;
+}
+
+input[type='radio'] {
+    position: absolute;
+    visibility: hidden;
+    display: none;
+}
+
+input[type='radio']:checked + label > span {
+    /*box-shadow: 0 2px 0 0 #90F0CE;*/
+    color: #444b54;
+}
+
+.toolbar__item_input#chats:checked ~ .toolbar__selected-line {
+    left: 50%;
+}
+
