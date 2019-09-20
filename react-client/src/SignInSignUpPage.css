@@ -40,7 +40,7 @@ body {
     border-radius: 6px;
     }
 
-.user-icon {
+.wrapper .user-icon {
     grid-area: icon;
     margin: 0 auto;
     text-align: center;
@@ -51,7 +51,7 @@ body {
     grid-row-end: 3;
 }
 
-.form {
+.wrapper .form {
     grid-area: form;
     display: grid;
     grid-template-rows: auto;
@@ -66,13 +66,13 @@ body {
     text-align: center;
 }
 
-.form__item.input-field.inline {
+.wrapper .form__item.input-field.inline {
     width: 80%;
     margin: 0 auto;
     height: auto;
 }
 
-.form__item_input {
+.wrapper .form__item_input {
     color: white;
     font-size: 16px;
     margin: 0 0 8px 0;
@@ -87,30 +87,30 @@ body {
     transition: border-bottom, box-shadow .25s ease-in-out;
 }
 
-.form__item_checkbox {
+.wrapper .form__item_checkbox {
     margin: 0;
     float: left;
 }
 /* label underline focus color */
-.input-field input[type=text]:focus {
+.wrapper .input-field input[type=text]:focus {
     border-bottom: 1px solid #000;
     box-shadow: 0 1px 0 0 #000;
 }
 /* label underline focus color */
-.input-field input[type=text]:focus,
-.input-field input[type=email]:focus,
-.input-field input[type=password]:focus {
+.wrapper .input-field input[type=text]:focus,
+.wrapper .input-field input[type=email]:focus,
+.wrapper .input-field input[type=password]:focus {
     border-bottom: 1px solid var(--main-color);
     box-shadow: 0 1px 0 0 #000;
 }
 /* valid color */
-.input-field input[type=text].valid,
-.input-field input[type=email].valid,
-.input-field input[type=password].valid {
+.wrapper .input-field input[type=text].valid,
+.wrapper .input-field input[type=email].valid,
+.wrapper .input-field input[type=password].valid {
     border-bottom: 1px solid var(--main-color-active);
 }
 
-.btn {
+.wrapper .btn {
     width: 80%;
     height: 46px;
     margin: 0 auto;
@@ -122,12 +122,12 @@ body {
     transition: all .25s ease-in-out;
 }
 
-.btn:hover {
+.wrapper .btn:hover {
     transform: translateY(4px) scale(0.98);
     transition: all .25s ease-in-out;
 }
 
-.additional_links {
+.wrapper .additional_links {
     position: relative;
     top: 10px;
     display: flex;
@@ -138,7 +138,7 @@ body {
     color: white;
 }
 
-.additional_links > a {
+.wrapper .additional_links > a {
     color: #cdcdcd;
     font-family: var(--prime-font)
 }
