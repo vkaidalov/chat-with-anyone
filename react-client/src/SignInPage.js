@@ -28,7 +28,7 @@ class SignInPage extends React.Component {
             .then(response => {
                 localStorage.setItem("token", response.data["token"]);
                 localStorage.setItem("userId", response.data["user_id"]);
-                this.props.history.push("/home");
+                this.props.history.push("/home/chats");
             })
             .catch(error => {
                 alert(error.response.data["message"] || error.response.data["email"]);

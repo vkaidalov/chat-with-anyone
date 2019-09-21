@@ -1,9 +1,13 @@
 import React from "react";
+import {Route, Link} from "react-router-dom";
 
 import axios from "./axiosBaseInstance";
 
 import UserIcon from "./user-icon.png";
 import "./HomePage.css";
+
+import ContactList from "./components/ContactList";
+import ChatList from "./components/ChatList";
 
 class HomePage extends React.Component {
     constructor(props) {
@@ -99,56 +103,34 @@ class HomePage extends React.Component {
 
                     <div className="toolbar">
                         <div className="toolbar__wrapper shadow">
-                            <input name="bar" className="toolbar__item_input" id="contacts" type="radio" defaultChecked={true} />
+                            <input name="bar" className="toolbar__item_input" id="contacts" type="radio" />
                             <label className="toolbar__item_label" htmlFor="contacts">
-                                <span>Contacts</span>
+                                <span>
+                                    <Link to={`${this.props.match.url}/contacts`}>Contacts</Link>
+                                </span>
                             </label>
 
-                            <input name="bar" className="toolbar__item_input" id="chats" type="radio"/>
+                            <input name="bar" className="toolbar__item_input" id="chats" type="radio" defaultChecked={true} />
                             <label className="toolbar__item_label" htmlFor="chats">
-                                <span>Chats</span>
+                                <span>
+                                    <Link to={`${this.props.match.url}/chats`}>Chats</Link>
+                                </span>
                             </label>
 
                             <input name="bar" className="toolbar__item_input" id="stranger" type="radio"/>
                             <label className="toolbar__item_label" htmlFor="stranger">
-                                <span>Stranger</span>
+                                <span>
+                                    <Link to={`${this.props.match.url}/stranger`}>Stranger</Link>
+                                </span>
                             </label>
 
                             <div className="toolbar__selected-line"/>
                         </div>
                     </div>
 
-                    <div className="contacts-area">
-                        <ul className="contacts__list">
-                            <li className="contacts__list_item">
-                                <div className="dialog inactive">
-                                    <div className="dialog__main_wrapper">
-                                        <div className="dialog__pic">
-                                            <img className="dialog__pic_user-pic" src={UserIcon} alt=""/>
-                                        </div>
-                                        <div className="dialog__meta">
-                                            <div className="user-info">
-                                                <span className="user-info__name">Jane Doe</span>
-                                                <span className="user-info__time">1 minute ago</span>
-                                            </div>
-                                            <div className="dialog__meta_message">
-                                                <p className="dialog__meta_message_p">How the brain 'approximates'
-                                                    without
-                                                    actually counting. From the time of early infancy, humans ...</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="dialog__options">
-                                    <span className="option">
-                                        <span className="option_icon"/>
-                                        <span className="option_icon"/>
-                                        <span className="option_icon"/>
-                                    </span>
-                                        <span className="notification">10</span>
-                                    </div>
-                                </div>
-                            </li>
-                        </ul>
+                    <div className="tab-item-list-area">
+                        <Route path={`${this.props.match.url}/contacts`} component={ContactList} />
+                        <Route path={`${this.props.match.url}/chats`} component={ChatList} />
                     </div>
                 </div>
 
