@@ -1,5 +1,7 @@
 import React from "react";
 
+import axios from "./axiosBaseInstance";
+
 import UserIcon from "./user-icon.png";
 import "./HomePage.css";
 
@@ -7,24 +9,38 @@ class HomePage extends React.Component {
     constructor(props) {
         super(props);
         this.handleMenuToggleButtonClick = this.handleMenuToggleButtonClick.bind(this);
+        this.handleSignOutButtonClick = this.handleSignOutButtonClick.bind(this);
+    }
+
+    handleSignOutButtonClick(_event) {
+        const userId = localStorage.getItem("userId");
+        const token = localStorage.getItem("token");
+        axios.post(`api/users/${userId}/sign-out`, {}, {
+            headers: {"Authorization": token}
+        })
+            .then(_response => {
+                localStorage.removeItem("userId");
+                localStorage.removeItem("token");
+                this.props.history.push("/");
+            });
     }
 
     handleMenuToggleButtonClick(_event) {
-        let toggle_block = document.getElementById('menu__toggle_block');
-        let toggle_button = document.getElementById('menu__toggle_button');
-        let toggle_button_input = document.getElementById('menu__toggle_input');
+        let toggleBlock = document.getElementById('menu__toggle_block');
+        let toggleButton = document.getElementById('menu__toggle_button');
+        let toggleButtonInput = document.getElementById('menu__toggle_input');
 
-        if (toggle_button_input.checked) {
-            toggle_block.style.left = '-24px';
-            toggle_block.style.opacity = '1';
-            toggle_button.style.zIndex = '2';
-            toggle_button.style.left = '168px';
+        if (toggleButtonInput.checked) {
+            toggleBlock.style.left = '-24px';
+            toggleBlock.style.opacity = '1';
+            toggleButton.style.zIndex = '2';
+            toggleButton.style.left = '168px';
         }
-        else if (!toggle_button_input.checked) {
-            toggle_block.style.left = '-340px';
-            toggle_block.style.opacity = '0';
-            toggle_button.style.zIndex = '1';
-            toggle_button.style.left = '0';
+        else if (!toggleButtonInput.checked) {
+            toggleBlock.style.left = '-340px';
+            toggleBlock.style.opacity = '0';
+            toggleButton.style.zIndex = '1';
+            toggleButton.style.left = '0';
         }
     }
 
@@ -67,7 +83,9 @@ class HomePage extends React.Component {
                                     </button>
                                 </form>
                                 <div/>
-                                <button className="menu__toggle_logout btn">Log out</button>
+                                <button className="menu__toggle_logout btn" onClick={this.handleSignOutButtonClick}>
+                                    Sign Out
+                                </button>
                             </div>
                         </div>
                         <div className="search">
@@ -81,7 +99,7 @@ class HomePage extends React.Component {
 
                     <div className="toolbar">
                         <div className="toolbar__wrapper shadow">
-                            <input name="bar" className="toolbar__item_input" id="contacts" type="radio" checked/>
+                            <input name="bar" className="toolbar__item_input" id="contacts" type="radio" defaultChecked={true} />
                             <label className="toolbar__item_label" htmlFor="contacts">
                                 <span>Contacts</span>
                             </label>

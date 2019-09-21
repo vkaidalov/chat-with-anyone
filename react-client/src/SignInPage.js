@@ -31,7 +31,7 @@ class SignInPage extends React.Component {
                 this.props.history.push("/home");
             })
             .catch(error => {
-                alert(error.response.data["message"]);
+                alert(error.response.data["message"] || error.response.data["email"]);
             });
     }
 
@@ -59,6 +59,7 @@ class SignInPage extends React.Component {
                         <button type="submit" className="form__item btn waves-effect waves-light">
                             Sign In
                         </button>
+
                         <div className="additional_links">
                             <Link className="register" to="/signup">Sign Up</Link>
                         </div>
