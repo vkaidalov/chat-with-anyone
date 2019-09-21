@@ -8,12 +8,127 @@ import "./HomePage.css";
 
 import ContactList from "./components/ContactList";
 import ChatList from "./components/ChatList";
+import MessageList from "./components/MessageList";
 
 class HomePage extends React.Component {
     constructor(props) {
         super(props);
+
+        this.state = {
+            username: '',
+            firstName: '',
+            lastName: '',
+            chats: [{
+                id: 0,
+                name: 'chat #1',
+                last_message_at: '2019-09-21T17:08:17.224Z',
+                last_message_text: 'Hello!'
+            }],
+            isChatSelected: true,
+            selectedChat: {
+                id: 0,
+                name: 'chat #1',
+                last_message_at: '2019-09-21T17:08:17.224Z'
+            },
+            selectedChatMessages: [{
+                id: 0,
+                username: "username",
+                created_at: "2019-09-21T17:08:17.224Z",
+                text: "Hello!"
+            }]
+        };
+
+        this.fetchUserDetail();
+        this.fetchUserChats();
+
+        this.handleChatItemClick = this.handleChatItemClick.bind(this);
         this.handleMenuToggleButtonClick = this.handleMenuToggleButtonClick.bind(this);
         this.handleSignOutButtonClick = this.handleSignOutButtonClick.bind(this);
+    }
+
+    fetchUserDetail() {
+        const userId = localStorage.getItem("userId");
+        const token = localStorage.getItem("token");
+        axios.get(`api/users/${userId}`, {
+            headers: {"Authorization": token}
+        })
+            .then(response => {
+                this.setState({
+                    username: response.data["username"],
+                    firstName: response.data["firstName"],
+                    lastName: response.data["lastName"]
+                });
+            })
+            .catch(() => {
+                alert("Error while fetching the user's detail.");
+            });
+    }
+
+    fetchUserChats() {
+        const userId = localStorage.getItem("userId");
+        const token = localStorage.getItem("token");
+        axios.get(`api/users/${userId}/chats/`, {
+            headers: {"Authorization": token}
+        })
+            .then(response => {
+                this.setState({
+                    chats: response.data.sort(
+                        (a, b) => (
+                            a["last_message_at"] > b["last_message_at"]) ? 1 :
+                            ((b["last_message_at"] > a["last_message_at"]) ? -1 : 0
+                            )
+                    ).reverse()
+                });
+            })
+            .catch(() => {
+                alert("Error while fetching the selected chat's messages.");
+            });
+    }
+
+    fetchSelectedChatMessages() {
+        if (!this.state.isChatSelected) {
+            return;
+        }
+
+        const token = localStorage.getItem("token");
+        axios.get(`api/chats/${this.state.selectedChat.id}/messages/`, {
+            headers: {"Authorization": token}
+        })
+            .then(response => {
+                this.setState({
+                    selectedChatMessages: response.data.sort(
+                        (a, b) => (
+                            a["created_at"] > b["created_at"]) ? 1 :
+                            ((b["created_at"] > a["created_at"]) ? -1 : 0
+                            )
+                    ).reverse()
+                })
+            })
+            .catch(() => {
+                alert("Error while fetching your chats.");
+            });
+    }
+
+    handleChatItemClick(_event, chatId) {
+        console.log(_event);
+        console.log(chatId + " is clicked.");
+        const chats = this.state.chats;
+
+        const selectedChat = chats.find((element, _index, _array) => {
+            return element.id === chatId;
+        });
+
+        console.log(selectedChat);
+
+        this.setState({selectedChat});
+
+        console.log(this.state.selectedChat);
+
+        this.fetchSelectedChatMessages();
+
+        this.setState({
+            isChatSelected: true
+        });
     }
 
     handleSignOutButtonClick(_event) {
@@ -39,8 +154,7 @@ class HomePage extends React.Component {
             toggleBlock.style.opacity = '1';
             toggleButton.style.zIndex = '2';
             toggleButton.style.left = '168px';
-        }
-        else if (!toggleButtonInput.checked) {
+        } else if (!toggleButtonInput.checked) {
             toggleBlock.style.left = '-340px';
             toggleBlock.style.opacity = '0';
             toggleButton.style.zIndex = '1';
@@ -56,7 +170,7 @@ class HomePage extends React.Component {
                         <div className="menu__toggle_wrapper">
                             <div className="menu__toggle_button" id="menu__toggle_button">
                                 <input type="checkbox" id="menu__toggle_input"
-                                       onClick={this.handleMenuToggleButtonClick} />
+                                       onClick={this.handleMenuToggleButtonClick}/>
                                 <label className="menu__toggle_hamburger" htmlFor="menu__toggle_input">
                                     <span/><span/><span/>
                                 </label>
@@ -103,14 +217,15 @@ class HomePage extends React.Component {
 
                     <div className="toolbar">
                         <div className="toolbar__wrapper shadow">
-                            <input name="bar" className="toolbar__item_input" id="contacts" type="radio" />
+                            <input name="bar" className="toolbar__item_input" id="contacts" type="radio"/>
                             <label className="toolbar__item_label" htmlFor="contacts">
                                 <span>
                                     <Link to={`${this.props.match.url}/contacts`}>Contacts</Link>
                                 </span>
                             </label>
 
-                            <input name="bar" className="toolbar__item_input" id="chats" type="radio" defaultChecked={true} />
+                            <input name="bar" className="toolbar__item_input" id="chats" type="radio"
+                                   defaultChecked={true}/>
                             <label className="toolbar__item_label" htmlFor="chats">
                                 <span>
                                     <Link to={`${this.props.match.url}/chats`}>Chats</Link>
@@ -129,100 +244,28 @@ class HomePage extends React.Component {
                     </div>
 
                     <div className="tab-item-list-area">
-                        <Route path={`${this.props.match.url}/contacts`} component={ContactList} />
-                        <Route path={`${this.props.match.url}/chats`} component={ChatList} />
+                        <Route path={`${this.props.match.url}/contacts`} component={ContactList}/>
+                        <Route path={`${this.props.match.url}/chats`}
+                               render={
+                                   () => <ChatList
+                                       chats={this.state.chats} handleChatItemClick={this.handleChatItemClick}
+                                   />
+                               }
+                        />
                     </div>
                 </div>
 
-                <div className="right-area messenger">
+                {this.state.isChatSelected ? (<div className="right-area messenger">
                     <div className="messenger__chat-meta">
-                        <div className="chat-meta__pic">
-                            <img src={UserIcon} alt=""/>
-                        </div>
                         <div className="chat-meta__info">
-                            <h3 className="chat-meta__info_title">Title of this chat|dialog</h3>
-                            <p>last seen 1 minute ago</p>
+                            <h3 className="chat-meta__info_title">
+                                {this.state.selectedChat.name}
+                            </h3>
                         </div>
                     </div>
 
                     <div className="messenger__messages">
-                        <ul className="messenger__messages_list">
-                            <li className="messages_list_item">
-                                <div className="message sender">
-                                    <div className="message_pic">
-                                        <img className="dialog__pic_user-pic" src={UserIcon} alt=""/>
-                                    </div>
-                                    <div className="message_context">
-                                        <div className="message_title">
-                                            <h3 className="chat-meta__info_title">Title of this chat|dialog</h3>
-                                        </div>
-                                        <div className="message_text">
-                                            <p>For years, scientists have explored how people estimate numerical
-                                                quantities
-                                                without physically counting objects one by one, approximating, for
-                                                instance,
-                                                how many paintings are displayed on a wall or estimating the number of
-                                                players on a football field.
-                                                Gaining a deeper understanding of how the process of approximation
-                                                occurs in
-                                                the brain has become a fertile area of research across numerous
-                                                disciplines,
-                                                including cognitive psychology education.</p>
-                                        </div>
-                                        <div className="message_time">
-                                            <span className="user-info__time">11:30 PM</span>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </li>
-
-                            <li className="messages_list_item">
-                                <div className="message receiver">
-                                    <div className="message_pic">
-                                        <img className="dialog__pic_user-pic" src={UserIcon} alt=""/>
-                                    </div>
-                                    <div className="message_context">
-                                        <div className="message_title">
-                                            <h3 className="chat-meta__info_title">Client title</h3>
-                                        </div>
-                                        <div className="message_text">
-                                            <p>That means I add up stuff one after the other—serial accumulator—based on
-                                                what I see in the center of where I look, as opposed to the edges. So
-                                                when
-                                                you estimate the number of cars behind you, you are likely moving your
-                                                center of gaze around and non-verbally adding up an approximation to the
-                                                number.</p>
-                                        </div>
-                                        <div className="message_time">
-                                            <span className="user-info__time">11:31 PM</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </li>
-
-                            <li className="messages_list_item">
-                                <div className="message sender">
-                                    <div className="message_pic">
-                                        <img className="dialog__pic_user-pic" src={UserIcon} alt=""/>
-                                    </div>
-                                    <div className="message_context">
-                                        <div className="message_title">
-                                            <h3 className="chat-meta__info_title">Title of this chat|dialog</h3>
-                                        </div>
-                                        <div className="message_text">
-                                            <p>How the process of approximation occurs in the brain has become a fertile
-                                                area of research across numerous disciplines, including cognitive
-                                                psychology
-                                                education.</p>
-                                        </div>
-                                        <div className="message_time">
-                                            <span>11:33 PM</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </li>
-                        </ul>
+                        <MessageList messages={this.state.selectedChatMessages} authUsername={this.state.username}/>
                     </div>
 
                     <div className="messenger__text-area">
@@ -233,7 +276,17 @@ class HomePage extends React.Component {
                             <button className="text-area_button"/>
                         </form>
                     </div>
-                </div>
+                </div>) : (
+                    <div className="right-area messenger">
+                        <div className="messenger__chat-meta">
+                            <div className="chat-meta__info">
+                                <h3 className="chat-meta__info_title">
+                                    Messages will appear here if a chat is selected.
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         );
     }
