@@ -3,6 +3,8 @@ import {Route, Link} from "react-router-dom";
 
 import axios from "./axiosBaseInstance";
 
+import handleInputChange from "./utils";
+
 import UserIcon from "./user-icon.png";
 import "./HomePage.css";
 
@@ -34,14 +36,18 @@ class HomePage extends React.Component {
                 username: "username",
                 created_at: "2019-09-21T17:08:17.224Z",
                 text: "Hello!"
-            }]
+            }],
+            newMessageText: ""
         };
 
         this.fetchUserDetail();
         this.fetchUserChats();
 
+        this.handleInputChange = handleInputChange.bind(this);
+
         this.handleChatItemClick = this.handleChatItemClick.bind(this);
         this.handleMenuToggleButtonClick = this.handleMenuToggleButtonClick.bind(this);
+        this.handleSendMessageButtonClick = this.handleSendMessageButtonClick.bind(this);
         this.handleSignOutButtonClick = this.handleSignOutButtonClick.bind(this);
     }
 
@@ -118,6 +124,25 @@ class HomePage extends React.Component {
             }
         });
         this.fetchSelectedChatMessages(selectedChatId);
+    }
+
+    handleSendMessageButtonClick(_event) {
+        _event.preventDefault();
+        const token = localStorage.getItem("token");
+        const chatId = this.state.selectedChat.id;
+        const text = this.state.newMessageText;
+        axios.post(`api/chats/${chatId}/messages/`, {text}, {
+            headers: {"Authorization": token}
+        })
+            .then(_response => {
+                this.setState({
+                    newMessageText: ""
+                });
+                this.fetchSelectedChatMessages(chatId);
+            })
+            .catch(_error => {
+                alert("Error while sending your message.");
+            });
     }
 
     handleSignOutButtonClick(_event) {
@@ -260,9 +285,16 @@ class HomePage extends React.Component {
                     <div className="messenger__text-area">
                         <form className="text-area_wrapper">
                             <div className="input-field text-area_input">
-                                <textarea id="textarea" className="materialize-textarea"/>
+                                <textarea
+                                    id="textarea" className="materialize-textarea"
+                                    name="newMessageText" onChange={this.handleInputChange}
+                                    value={this.state.newMessageText}
+                                />
                             </div>
-                            <button className="text-area_button"/>
+                            <button
+                                className="text-area_button"
+                                onClick={this.handleSendMessageButtonClick}
+                            />
                         </form>
                     </div>
                 </div>) : (
