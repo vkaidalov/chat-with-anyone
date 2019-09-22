@@ -24,11 +24,10 @@ class HomePage extends React.Component {
                 last_message_at: '2019-09-21T17:08:17.224Z',
                 last_message_text: 'Hello!'
             }],
-            isChatSelected: true,
+            isChatSelected: false,
             selectedChat: {
                 id: 0,
-                name: 'chat #1',
-                last_message_at: '2019-09-21T17:08:17.224Z'
+                name: 'chat #1'
             },
             selectedChatMessages: [{
                 id: 0,
@@ -55,8 +54,8 @@ class HomePage extends React.Component {
             .then(response => {
                 this.setState({
                     username: response.data["username"],
-                    firstName: response.data["firstName"],
-                    lastName: response.data["lastName"]
+                    firstName: response.data["first_name"],
+                    lastName: response.data["last_name"]
                 });
             })
             .catch(() => {
@@ -73,25 +72,20 @@ class HomePage extends React.Component {
             .then(response => {
                 this.setState({
                     chats: response.data.sort(
-                        (a, b) => (
-                            a["last_message_at"] > b["last_message_at"]) ? 1 :
-                            ((b["last_message_at"] > a["last_message_at"]) ? -1 : 0
-                            )
+                        (a, b) => (a["last_message_at"] > b["last_message_at"]) ? 1 : (
+                            (b["last_message_at"] > a["last_message_at"]) ? -1 : 0
+                        )
                     ).reverse()
                 });
             })
             .catch(() => {
-                alert("Error while fetching the selected chat's messages.");
+                alert("Error while fetching the user's chats.");
             });
     }
 
-    fetchSelectedChatMessages() {
-        if (!this.state.isChatSelected) {
-            return;
-        }
-
+    fetchSelectedChatMessages(selectedChatId) {
         const token = localStorage.getItem("token");
-        axios.get(`api/chats/${this.state.selectedChat.id}/messages/`, {
+        axios.get(`api/chats/${selectedChatId}/messages/`, {
             headers: {"Authorization": token}
         })
             .then(response => {
@@ -101,8 +95,8 @@ class HomePage extends React.Component {
                             a["created_at"] > b["created_at"]) ? 1 :
                             ((b["created_at"] > a["created_at"]) ? -1 : 0
                             )
-                    ).reverse()
-                })
+                    )
+                });
             })
             .catch(() => {
                 alert("Error while fetching your chats.");
@@ -110,25 +104,20 @@ class HomePage extends React.Component {
     }
 
     handleChatItemClick(_event, chatId) {
-        console.log(_event);
-        console.log(chatId + " is clicked.");
-        const chats = this.state.chats;
-
-        const selectedChat = chats.find((element, _index, _array) => {
+        const selectedChat = this.state.chats.find((element, _index, _array) => {
             return element.id === chatId;
         });
-
-        console.log(selectedChat);
-
-        this.setState({selectedChat});
-
-        console.log(this.state.selectedChat);
-
-        this.fetchSelectedChatMessages();
+        const selectedChatId = selectedChat.id;
+        const selectedChatName = selectedChat.name;
 
         this.setState({
-            isChatSelected: true
+            isChatSelected: true,
+            selectedChat: {
+                id: selectedChatId,
+                name: selectedChatName
+            }
         });
+        this.fetchSelectedChatMessages(selectedChatId);
     }
 
     handleSignOutButtonClick(_event) {
@@ -265,7 +254,7 @@ class HomePage extends React.Component {
                     </div>
 
                     <div className="messenger__messages">
-                        <MessageList messages={this.state.selectedChatMessages} authUsername={this.state.username}/>
+                        <MessageList messages={this.state.selectedChatMessages} username={this.state.username}/>
                     </div>
 
                     <div className="messenger__text-area">

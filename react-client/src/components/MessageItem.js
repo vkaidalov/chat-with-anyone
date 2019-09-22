@@ -5,7 +5,7 @@ class MessageItem extends React.Component {
     render() {
         return (
             <li className="messages_list_item">
-                <div className={"message " + this.props["isUsers"] ? "receiver" : "sender"}>
+                <div className={"message " + (this.props["isUsers"] ? "receiver" : "sender")}>
                     <div className="message_pic">
                         <img className="dialog__pic_user-pic" src={UserIcon} alt=""/>
                     </div>
