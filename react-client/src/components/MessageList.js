@@ -3,6 +3,14 @@ import React from "react";
 import MessageItem from "./MessageItem";
 
 class MessageList extends React.Component {
+    componentDidMount() {
+        this.messagesEnd.scrollIntoView({behavior: "smooth"});
+    }
+
+    componentDidUpdate() {
+        this.messagesEnd.scrollIntoView({behavior: "smooth"});
+    }
+
     render() {
         const username = this.props["username"];
         return (
@@ -18,6 +26,11 @@ class MessageList extends React.Component {
                         />
                     )
                 }
+                <li style={{float: "left", clear: "both"}}
+                    ref={(el) => {
+                        this.messagesEnd = el;
+                    }}>
+                </li>
             </ul>
         );
     }
