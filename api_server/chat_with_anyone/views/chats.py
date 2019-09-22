@@ -423,16 +423,30 @@ class ChatMessageDetails(web.View, CorsViewMixin):
                 {'message': "Deleting another user's message is prohibited"},
                 status=403
             )
+        room_id = user_message.room_id
 
         try:
-            await GroupMessage.delete.where(
-                GroupMessage.id == request_message_id
-            ).gino.status()
+            await user_message.delete()
 
         except UniqueViolationError as ex:
             return web.json_response(
                 {'message': ex.as_dict()['detail']},
                 status=400
             )
+
+        created_at = await GroupMessage\
+            .select('created_at')\
+            .where(GroupMessage.room_id == room_id)\
+            .order_by(GroupMessage.created_at.desc())\
+            .limit(1)\
+            .gino\
+            .scalar()
+
+        await GroupRoom\
+            .update\
+            .values(last_message_at=created_at)\
+            .where(GroupRoom.id == room_id)\
+            .gino\
+            .status()
 
         return web.json_response(status=204)
