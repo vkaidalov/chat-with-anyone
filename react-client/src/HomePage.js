@@ -48,19 +48,20 @@ class HomePage extends React.Component {
         this.handleChatItemClick = this.handleChatItemClick.bind(this);
         this.handleMenuToggleButtonClick = this.handleMenuToggleButtonClick.bind(this);
         this.handleSendMessageButtonClick = this.handleSendMessageButtonClick.bind(this);
+        this.handleCreateNewChatButtonClick = this.handleCreateNewChatButtonClick.bind(this);
         this.handleSignOutButtonClick = this.handleSignOutButtonClick.bind(this);
     }
 
     componentDidMount() {
         this.timerID = setInterval(
-          () => {
-              if (this.state.isChatSelected) {
-                  this.fetchSelectedChatMessages(
-                      this.state.selectedChat.id
-                  )
-              }
-          },
-          1000
+            () => {
+                if (this.state.isChatSelected) {
+                    this.fetchSelectedChatMessages(
+                        this.state.selectedChat.id
+                    )
+                }
+            },
+            1000
         );
     }
 
@@ -143,8 +144,8 @@ class HomePage extends React.Component {
         this.fetchSelectedChatMessages(selectedChatId);
     }
 
-    handleSendMessageButtonClick(_event) {
-        _event.preventDefault();
+    handleSendMessageButtonClick(event) {
+        event.preventDefault();
         const token = localStorage.getItem("token");
         const chatId = this.state.selectedChat.id;
         const text = this.state.newMessageText;
@@ -159,6 +160,24 @@ class HomePage extends React.Component {
             })
             .catch(_error => {
                 alert("Error while sending your message.");
+            });
+    }
+
+    handleCreateNewChatButtonClick(_event) {
+        const chatName = prompt("Enter a name for a new chat:");
+        if (!chatName) {
+            alert("You must specify a name to create a chat.");
+            return;
+        }
+        const token = localStorage.getItem("token");
+        axios.post(`api/chats/`, {name: chatName}, {
+            headers: {"Authorization": token}
+        })
+            .then(_response => {
+                this.fetchUserChats();
+            })
+            .catch(_error => {
+                alert("Error while creating a new chat.");
             });
     }
 
@@ -278,9 +297,22 @@ class HomePage extends React.Component {
                         <Route path={`${this.props.match.url}/contacts`} component={ContactList}/>
                         <Route path={`${this.props.match.url}/chats`}
                                render={
-                                   () => <ChatList
-                                       chats={this.state.chats} handleChatItemClick={this.handleChatItemClick}
-                                   />
+                                   () => <div>
+                                       <button
+                                           className="btn waves-effect waves-light"
+                                           onClick={this.handleCreateNewChatButtonClick}
+                                           style={{
+                                               "z-index": 0,
+                                               margin: "10px 10px",
+                                               width: "98%"
+                                           }}
+                                       >
+                                           Create New Chat
+                                       </button>
+                                       <ChatList
+                                           chats={this.state.chats} handleChatItemClick={this.handleChatItemClick}
+                                       />
+                                   </div>
                                }
                         />
                     </div>
