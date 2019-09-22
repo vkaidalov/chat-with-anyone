@@ -51,6 +51,23 @@ class HomePage extends React.Component {
         this.handleSignOutButtonClick = this.handleSignOutButtonClick.bind(this);
     }
 
+    componentDidMount() {
+        this.timerID = setInterval(
+          () => {
+              if (this.state.isChatSelected) {
+                  this.fetchSelectedChatMessages(
+                      this.state.selectedChat.id
+                  )
+              }
+          },
+          1000
+        );
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.timerID);
+    }
+
     fetchUserDetail() {
         const userId = localStorage.getItem("userId");
         const token = localStorage.getItem("token");
