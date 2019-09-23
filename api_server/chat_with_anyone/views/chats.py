@@ -294,7 +294,7 @@ class ChatMessages(web.View, CorsViewMixin):
 
         query = GroupMessage.outerjoin(
             User, onclause=(GroupMessage.user_id == User.id)
-        ).select().where(GroupMessage.room_id == int(chat_id))
+        ).select().where(GroupMessage.room_id == int(chat_id)).order_by(GroupMessage.created_at)
 
         messages = await query.gino.load((GroupMessage, User.username)).all()
 
@@ -439,7 +439,7 @@ class ChatMessageDetails(web.View, CorsViewMixin):
             .where(GroupMessage.room_id == room_id)\
             .order_by(GroupMessage.created_at.desc())\
             .gino\
-            .first()
+            .scalar()
 
         print(last_message_at, last_message_text)
 
