@@ -1,3 +1,5 @@
+import arrow
+
 from aiohttp import web
 from aiohttp_apispec import (
     docs, request_schema, response_schema, marshal_with
@@ -72,7 +74,8 @@ class PasswordChangeRequestSchema(Schema):
 class UserChatsResponseSchema(Schema):
     id = fields.Int()
     name = fields.Str()
-    last_message_at = fields.DateTime()
+    last_message_at = fields.Str()
+    last_message_text = fields.Str()
 
 
 class UserList(web.View, CorsViewMixin):
@@ -456,13 +459,19 @@ class UserChats(web.View, CorsViewMixin):
         ).outerjoin(
             GroupRoom, onclause=(
                 GroupRoom.id == GroupMembership.room_id)
-        ).select().where(User.id == request_user_id)
+        ).select().where(
+            User.id == request_user_id
+        ).order_by(GroupRoom.last_message_at.desc())
 
-        users = await query.gino.load(
-            User.distinct(User.id).load(add_room=GroupRoom)).all()
+        users = await query.gino.load(User.distinct(User.id).load(add_room=GroupRoom)).all()
 
         return web.json_response(
             UserChatsResponseSchema().dump(
-                [room.to_dict() for room in users[0].rooms],
+                [{
+                    "id": room.id,
+                    "name": room.name,
+                    "last_message_at": arrow.get(room.last_message_at).humanize(),
+                    "last_message_text": room.last_message_text
+                } for room in users[0].rooms],
                 many=True
             ).data)

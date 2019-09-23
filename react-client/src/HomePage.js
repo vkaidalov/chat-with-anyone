@@ -113,12 +113,7 @@ class HomePage extends React.Component {
         })
             .then(response => {
                 this.setState({
-                    selectedChatMessages: response.data.sort(
-                        (a, b) => (
-                            a["created_at"] > b["created_at"]) ? 1 :
-                            ((b["created_at"] > a["created_at"]) ? -1 : 0
-                            )
-                    )
+                    selectedChatMessages: response.data
                 });
             })
             .catch(() => {
