@@ -49,6 +49,7 @@ class HomePage extends React.Component {
         this.handleMenuToggleButtonClick = this.handleMenuToggleButtonClick.bind(this);
         this.handleSendMessageButtonClick = this.handleSendMessageButtonClick.bind(this);
         this.handleCreateNewChatButtonClick = this.handleCreateNewChatButtonClick.bind(this);
+        this.handleLeaveChatButtonClick = this.handleLeaveChatButtonClick.bind(this);
         this.handleSignOutButtonClick = this.handleSignOutButtonClick.bind(this);
     }
 
@@ -169,6 +170,27 @@ class HomePage extends React.Component {
             })
             .catch(_error => {
                 alert("Error while creating a new chat.");
+            });
+    }
+
+    handleLeaveChatButtonClick(_event) {
+        if (!window.confirm("Are you sure you want to leave this chat?")) {
+            return;
+        }
+        this.setState({
+            isChatSelected: false
+        });
+        const userId = localStorage.getItem("userId");
+        const token = localStorage.getItem("token");
+        const chatId = this.state.selectedChat.id;
+        axios.delete(`api/chats/${chatId}/users/${userId}`, {
+            headers: {"Authorization": token}
+        })
+            .then(_response => {
+                // nothing!
+            })
+            .catch(_error => {
+                alert("Error while leaving the selected chat.");
             });
     }
 
@@ -310,12 +332,22 @@ class HomePage extends React.Component {
                 </div>
 
                 {this.state.isChatSelected ? (<div className="right-area messenger">
-                    <div className="messenger__chat-meta">
+                    <div className="messenger__chat-meta" style={{justifyContent: "space-between"}}>
                         <div className="chat-meta__info">
                             <h3 className="chat-meta__info_title">
                                 {this.state.selectedChat.name}
                             </h3>
                         </div>
+                        <button
+                                className="btn waves-effect waves-light"
+                                onClick={this.handleLeaveChatButtonClick}
+                                style={{
+                                    zIndex: 0,
+                                    margin: "10px 10px",
+                                    float: "right",
+                                    backgroundColor: "IndianRed"
+                                }}
+                            >Leave Chat</button>
                     </div>
 
                     <div className="messenger__messages">
@@ -339,18 +371,18 @@ class HomePage extends React.Component {
                     </div>
                 </div>) : (
                     <div className="right-area messenger">
-                        <div className="messenger__chat-meta">
-                            <div className="chat-meta__info">
-                                <h3 className="chat-meta__info_title">
-                                    Messages will appear here if a chat is selected.
-                                </h3>
-                            </div>
-                        </div>
+                    <div className="messenger__chat-meta">
+                    <div className="chat-meta__info">
+                    <h3 className="chat-meta__info_title">
+                    Messages will appear here if a chat is selected.
+                    </h3>
                     </div>
-                )}
-            </div>
-        );
-    }
-}
+                    </div>
+                    </div>
+                    )}
+                    </div>
+                    );
+                }
+                }
 
-export default HomePage;
+                export default HomePage;
