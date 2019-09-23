@@ -1,3 +1,5 @@
+import arrow
+
 from aiohttp import web
 from aiohttp_apispec import docs, request_schema, response_schema
 from aiohttp_cors import CorsViewMixin
@@ -37,7 +39,7 @@ class MessageRequestSchema(Schema):
 class MessageResponseSchema(Schema):
     id = fields.Int()
     text = fields.Str(validate=validate.Length(max=500), required=True)
-    created_at = fields.DateTime()
+    created_at = fields.Str()
     username = fields.Str(validate=validate.Length(max=40), required=True)
 
 
@@ -301,7 +303,7 @@ class ChatMessages(web.View, CorsViewMixin):
                 [{
                     "id": message.id,
                     "text": message.text,
-                    "created_at": message.created_at,
+                    "created_at": arrow.get(message.created_at).format('hh:mm A'),
                     "username": username
                 } for message, username in messages],
                 many=True
@@ -338,12 +340,10 @@ class ChatMessages(web.View, CorsViewMixin):
             user_id=user.id
         )
 
-        await GroupRoom\
-            .update\
-            .values(last_message_at=message.created_at)\
-            .where(GroupRoom.id == int(chat_id))\
-            .gino\
-            .status()
+        await GroupRoom.update.values(
+            last_message_at=message.created_at,
+            last_message_text=message.text
+        ).where(GroupRoom.id == int(chat_id)).gino.status()
 
         return web.json_response(status=201)
 
@@ -434,19 +434,18 @@ class ChatMessageDetails(web.View, CorsViewMixin):
                 status=400
             )
 
-        created_at = await GroupMessage\
-            .select('created_at')\
+        last_message_at, last_message_text = await GroupMessage\
+            .select('created_at', 'text')\
             .where(GroupMessage.room_id == room_id)\
             .order_by(GroupMessage.created_at.desc())\
-            .limit(1)\
             .gino\
-            .scalar()
+            .first()
 
-        await GroupRoom\
-            .update\
-            .values(last_message_at=created_at)\
-            .where(GroupRoom.id == room_id)\
-            .gino\
-            .status()
+        print(last_message_at, last_message_text)
+
+        await GroupRoom.update.values(
+            last_message_at=last_message_at,
+            last_message_text=last_message_text
+        ).where(GroupRoom.id == room_id).gino.status()
 
         return web.json_response(status=204)

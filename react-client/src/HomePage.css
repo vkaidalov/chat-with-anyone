@@ -9,6 +9,10 @@
     --tech-font: 'Lato', sans-serif;
 }
 
+p {
+	overflow-wrap: anywhere;
+}
+
 body {
 	overflow: hidden;
 }
@@ -57,7 +61,8 @@ body {
 
 .tab-item-list-area {
 	height: 100%;
-	overflow-y: scroll;
+	overflow-y: auto;
+	scrollbar-width: thin;
 }
 
 .contacts__list {
@@ -241,9 +246,10 @@ body {
 .messenger {
 	margin: 24px 24px 24px 0;
 	display: grid;
+	grid: subgrid;
 	grid-template-rows: 15% 70% 15%;
     grid-template-columns: 1fr;
-    position: relative;
+	position: relative;
     background-color: #fff;
     border-radius: 6px;
     box-shadow: 0 30px 6px -20px rgba(0,0,0,0.2), 0 0 2px 0 rgba(0,0,0,0.2);
@@ -290,6 +296,7 @@ body {
 	height: 100%;
 	margin: 0 8px 0 8px;
 	overflow-y: scroll;
+	scrollbar-width: thin;
 }
 .messages_list_item {
 	margin: 24px 0;
