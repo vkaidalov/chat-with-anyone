@@ -55,6 +55,7 @@ class HomePage extends React.Component {
     componentDidMount() {
         this.timerID = setInterval(
             () => {
+                this.fetchUserChats();
                 if (this.state.isChatSelected) {
                     this.fetchSelectedChatMessages(
                         this.state.selectedChat.id
@@ -95,11 +96,7 @@ class HomePage extends React.Component {
         })
             .then(response => {
                 this.setState({
-                    chats: response.data.sort(
-                        (a, b) => (a["last_message_at"] > b["last_message_at"]) ? 1 : (
-                            (b["last_message_at"] > a["last_message_at"]) ? -1 : 0
-                        )
-                    ).reverse()
+                    chats: response.data
                 });
             })
             .catch(() => {
@@ -161,7 +158,6 @@ class HomePage extends React.Component {
     handleCreateNewChatButtonClick(_event) {
         const chatName = prompt("Enter a name for a new chat:");
         if (!chatName) {
-            alert("You must specify a name to create a chat.");
             return;
         }
         const token = localStorage.getItem("token");
@@ -297,9 +293,9 @@ class HomePage extends React.Component {
                                            className="btn waves-effect waves-light"
                                            onClick={this.handleCreateNewChatButtonClick}
                                            style={{
-                                               "z-index": 0,
+                                               zIndex: 0,
                                                margin: "10px 10px",
-                                               width: "98%"
+                                               width: "96%"
                                            }}
                                        >
                                            Create New Chat

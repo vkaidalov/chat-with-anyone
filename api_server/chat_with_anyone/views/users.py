@@ -472,6 +472,8 @@ class UserChats(web.View, CorsViewMixin):
                     "name": room.name,
                     "last_message_at": arrow.get(room.last_message_at).humanize(),
                     "last_message_text": room.last_message_text
-                } for room in users[0].rooms],
+                } for room in sorted(
+                    users[0].rooms, key=lambda x: x.last_message_at, reverse=True
+                )],
                 many=True
             ).data)
