@@ -358,15 +358,6 @@ class HomePage extends React.Component {
                                     <Link to={`${this.props.match.url}/chats`}>Chats</Link>
                                 </span>
                             </label>
-
-                            <input name="bar" className="toolbar__item_input" id="stranger" type="radio"/>
-                            <label className="toolbar__item_label" htmlFor="stranger">
-                                <span>
-                                    <Link to={`${this.props.match.url}/stranger`}>Stranger</Link>
-                                </span>
-                            </label>
-
-                            <div className="toolbar__selected-line"/>
                         </div>
                     </div>
 
