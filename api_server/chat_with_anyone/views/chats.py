@@ -206,18 +206,18 @@ class ChatUserDetails(web.View):
         request_user_id = int(self.request.match_info.get('user_id'))
         request_chat_id = int(self.request.match_info.get('chat_id'))
 
-        if user.id != request_user_id:
-            return web.json_response(
-                {"message": "Deleting another user is forbidden"},
-                status=403
-            )
-
         request_chat = await GroupRoom.get(request_chat_id)
 
         if request_chat is None:
             return web.json_response(
                 {'message': f'Chat with ID "{request_chat_id}" was not found'},
                 status=404
+            )
+
+        if user.id != request_user_id:
+            return web.json_response(
+                {"message": "Deleting another user is forbidden"},
+                status=403
             )
 
         user_group = await GroupMembership.query.where(
@@ -228,7 +228,7 @@ class ChatUserDetails(web.View):
         ).gino.first()
 
         if user_group is None:
-            message = f'User with ID "{request_user_id}" does not exist'
+            message = f'User with ID "{request_user_id}" does not exist in chat'
 
             return web.json_response(
                 {'message': message},
@@ -271,6 +271,7 @@ class ChatMessages(web.View):
     async def get(self):
         chat_id = self.request.match_info.get('chat_id')
         chat = await GroupRoom.get(int(chat_id))
+
         if not chat:
             return web.json_response(
                 {'message': 'Chat not found.'}, status=404
@@ -354,14 +355,16 @@ class ChatMessageDetails(web.View):
         user = self.request['user']
 
         request_message_id = int(self.request.match_info.get('message_id'))
+        request_chat_id = int(self.request.match_info.get('chat_id'))
 
-        user_message = await GroupMessage.query.where(
-            GroupMessage.id == request_message_id).gino.first()
+        user_message = await GroupMessage.query.where(and_(
+            GroupMessage.id == request_message_id,
+            GroupMessage.room_id == request_chat_id)).gino.first()
 
         if not user_message:
             return web.json_response(
                 {'message': "Message not found. Incorrect id"},
-                status=403
+                status=404
             )
 
         if user.id != user_message.user_id:
@@ -397,14 +400,16 @@ class ChatMessageDetails(web.View):
         user = self.request['user']
 
         request_message_id = int(self.request.match_info.get('message_id'))
+        request_chat_id = int(self.request.match_info.get('chat_id'))
 
-        user_message = await GroupMessage.query.where(
-            GroupMessage.id == request_message_id).gino.first()
+        user_message = await GroupMessage.query.where(and_(
+            GroupMessage.id == request_message_id,
+            GroupMessage.room_id == request_chat_id)).gino.first()
 
         if not user_message:
             return web.json_response(
                 {'message': "Message not found. Incorrect id"},
-                status=403
+                status=404
             )
 
         if user.id != user_message.user_id:

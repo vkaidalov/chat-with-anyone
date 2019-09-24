@@ -76,17 +76,16 @@ async def test_get_list_users_with_param(cli, user):
 
 
 async def test_get_user_detail(cli, user):
-    resp = await cli.get('/api/users/1',
-                         headers={'Authorization': TOKEN})
     response_json = {"id": 1, "username": "test_data",
                      "first_name": "test_data", "last_name": "test_data"}
 
+    resp = await cli.get('/api/users/1',
+                         headers={'Authorization': TOKEN})
     assert resp.status == 200
     assert await resp.json() == response_json
 
     resp = await cli.get('/api/users/2',
                          headers={'Authorization': TOKEN})
-
     assert resp.status == 404
     assert await resp.text() == '{"message": "User not found."}'
 

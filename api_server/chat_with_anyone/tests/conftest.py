@@ -1,4 +1,5 @@
 import argparse
+from datetime import datetime
 
 import pathlib
 import pytest
@@ -13,6 +14,9 @@ from ..middlewares import setup_middlewares
 from ..db import db
 from ..models.user import User
 from ..models.contact import Contact
+from ..models.group_room import GroupRoom
+from ..models.group_membership import GroupMembership
+from ..models.group_message import GroupMessage
 
 BASE_DIR = pathlib.Path(__file__).parents[2]
 DEFAULT_CONFIG_PATH = BASE_DIR / 'config' / 'test_chat_with_anyone'
@@ -92,4 +96,50 @@ async def contact(additional_user):
     await Contact.create(
         owner_id=1,
         contact_id=2
+    )
+
+
+@pytest.fixture
+async def chat(user):
+    created_chat = await GroupRoom.create(
+        name='test_data'
+    )
+
+    await GroupMembership.create(
+        room_id=created_chat.id,
+        user_id=1
+    )
+
+
+@pytest.fixture
+async def additional_chat(additional_user, chat):
+    created_chat = await GroupRoom.create(
+        name='test_data'
+    )
+
+    await GroupMembership.create(
+        room_id=created_chat.id,
+        user_id=2
+    )
+
+
+@pytest.fixture
+async def message(chat):
+    await GroupMessage.create(
+        text="test_data",
+        room_id=1,
+        user_id=1,
+        created_at=datetime(year=2019, month=10, day=2,
+                            hour=13, minute=0, second=0)
+    )
+
+
+@pytest.fixture
+async def additional_message(additional_chat, message):
+    await GroupMessage.create(
+        text="test_data2",
+        room_id=2,
+        user_id=2,
+        created_at=datetime(year=2019, month=10, day=2,
+                            hour=13, minute=0, second=0)
     )
