@@ -64,15 +64,15 @@ async def test_get_list_users_with_param(cli, user):
     assert resp.status == 200
     assert await resp.json() == []
 
-    # resp = await cli.get('/api/users/?page=-1',
-    #                      headers={'Authorization': TOKEN})
-    # assert resp.status == 200
-    # assert await resp.json() == response_json
-    #
-    # resp = await cli.get('/api/users/?page_size=-1',
-    #                      headers={'Authorization': TOKEN})
-    # assert resp.status == 200
-    # assert await resp.json() == response_json
+    resp = await cli.get('/api/users/?page=-1',
+                         headers={'Authorization': TOKEN})
+    assert resp.status == 200
+    assert await resp.json() == response_json
+
+    resp = await cli.get('/api/users/?page_size=-1',
+                         headers={'Authorization': TOKEN})
+    assert resp.status == 200
+    assert await resp.json() == response_json
 
 
 async def test_get_user_detail(cli, user):

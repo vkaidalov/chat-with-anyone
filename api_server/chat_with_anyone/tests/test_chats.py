@@ -32,15 +32,15 @@ async def test_get_list_chats_with_param(cli, chat):
     assert resp.status == 200
     assert await resp.json() == []
 
-    # resp = await cli.get('/api/chats/?page=-1',
-    #                      headers={'Authorization': TOKEN})
-    # assert resp.status == 200
-    # assert await resp.json() == response_json
-    #
-    # resp = await cli.get('/api/chats/?page_size=-1',
-    #                      headers={'Authorization': TOKEN})
-    # assert resp.status == 200
-    # assert await resp.json() == response_json
+    resp = await cli.get('/api/chats/?page=-1',
+                         headers={'Authorization': TOKEN})
+    assert resp.status == 200
+    assert await resp.json() == response_json
+
+    resp = await cli.get('/api/chats/?page_size=-1',
+                         headers={'Authorization': TOKEN})
+    assert resp.status == 200
+    assert await resp.json() == response_json
 
 
 async def test_create_chat(cli, user):

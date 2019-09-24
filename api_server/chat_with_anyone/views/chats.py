@@ -295,7 +295,8 @@ class ChatMessages(web.View, CorsViewMixin):
 
         query = GroupMessage.outerjoin(
             User, onclause=(GroupMessage.user_id == User.id)
-        ).select().where(GroupMessage.room_id == int(chat_id)).order_by(GroupMessage.created_at)
+        ).select().where(GroupMessage.room_id == int(chat_id)
+                         ).order_by(GroupMessage.created_at)
 
         messages = await query.gino.load((GroupMessage, User.username)).all()
 
@@ -304,7 +305,8 @@ class ChatMessages(web.View, CorsViewMixin):
                 [{
                     "id": message.id,
                     "text": message.text,
-                    "created_at": arrow.get(message.created_at).format('hh:mm A'),
+                    "created_at":
+                        arrow.get(message.created_at).format('hh:mm A'),
                     "username": username
                 } for message, username in messages],
                 many=True
@@ -384,16 +386,9 @@ class ChatMessageDetails(web.View, CorsViewMixin):
                 status=403
             )
 
-        try:
-            await user_message.update(
-                text=data['text']
-            ).apply()
-
-        except UniqueViolationError as ex:
-            return web.json_response(
-                {'message': ex.as_dict()['detail']},
-                status=400
-            )
+        await user_message.update(
+            text=data['text']
+        ).apply()
 
         return web.json_response(status=204)
 
@@ -430,14 +425,7 @@ class ChatMessageDetails(web.View, CorsViewMixin):
             )
         room_id = user_message.room_id
 
-        try:
-            await user_message.delete()
-
-        except UniqueViolationError as ex:
-            return web.json_response(
-                {'message': ex.as_dict()['detail']},
-                status=400
-            )
+        await user_message.delete()
 
         last_message_at, last_message_text = await GroupMessage\
             .select('created_at', 'text')\
