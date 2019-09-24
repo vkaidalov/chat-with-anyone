@@ -4,7 +4,7 @@ from aiohttp_apispec import docs
 from ..models.user import User
 
 
-@docs(tags=['Auth'], summary='Email confirmation')
+@docs(tags=['Auth'], summary='Email confirmation.')
 async def email_token_confirmation(request):
     user = await User.query.where(
         User.token == request.match_info.get('token')

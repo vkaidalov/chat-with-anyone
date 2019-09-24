@@ -1,5 +1,8 @@
+import arrow
+
 from aiohttp import web
 from aiohttp_apispec import docs, request_schema, response_schema
+from aiohttp_cors import CorsViewMixin
 from asyncpg import ForeignKeyViolationError, UniqueViolationError
 from marshmallow import Schema, fields, validate
 from sqlalchemy import and_
@@ -36,14 +39,14 @@ class MessageRequestSchema(Schema):
 class MessageResponseSchema(Schema):
     id = fields.Int()
     text = fields.Str(validate=validate.Length(max=500), required=True)
-    created_at = fields.DateTime()
+    created_at = fields.Str()
     username = fields.Str(validate=validate.Length(max=40), required=True)
 
 
-class Chats(web.View):
+class Chats(web.View, CorsViewMixin):
     @docs(
-        tags=['chats'],
-        summary='Create a new chat',
+        tags=['Chats'],
+        summary='Create a new chat.',
         parameters=[
             {
                 'in': 'header',
@@ -70,8 +73,8 @@ class Chats(web.View):
         return web.json_response(status=201)
 
     @docs(
-        tags=['chats'],
-        summary='Fetch list of chats',
+        tags=['Chats'],
+        summary='Fetch list of chats.',
         parameters=[
             {
                 'in': 'header',
@@ -108,7 +111,10 @@ class Chats(web.View):
             page = 1
             page_size = 10
 
-        if page_size > 50:
+        if page < 1 or page > 50:
+            page = 50
+
+        if page_size < 1 or page_size > 50:
             page_size = 50
 
         name = query.get('name')
@@ -128,10 +134,10 @@ class Chats(web.View):
             ).data)
 
 
-class ChatUserList(web.View):
+class ChatUserList(web.View, CorsViewMixin):
     @docs(
-        tags=['chats'],
-        summary='Add user into chat',
+        tags=['Chats'],
+        summary='Add user into chat.',
         parameters=[{
             'in': 'header',
             'name': 'Authorization',
@@ -189,10 +195,10 @@ class ChatUserList(web.View):
         return web.json_response(status=201)
 
 
-class ChatUserDetails(web.View):
+class ChatUserDetails(web.View, CorsViewMixin):
     @docs(
-        tags=['chats'],
-        summary='Delete from chats',
+        tags=['Chats'],
+        summary='Remove a user from a chat.',
         parameters=[{
             'in': 'header',
             'name': 'Authorization',
@@ -255,10 +261,10 @@ class ChatUserDetails(web.View):
         return web.json_response(status=204)
 
 
-class ChatMessages(web.View):
+class ChatMessages(web.View, CorsViewMixin):
     @docs(
-        tags=['message'],
-        summary='Fetch all message in chat',
+        tags=['Messages'],
+        summary='Fetch all messages in a chat.',
         parameters=[{
             'in': 'header',
             'name': 'Authorization',
@@ -289,7 +295,7 @@ class ChatMessages(web.View):
 
         query = GroupMessage.outerjoin(
             User, onclause=(GroupMessage.user_id == User.id)
-        ).select().where(GroupMessage.room_id == int(chat_id))
+        ).select().where(GroupMessage.room_id == int(chat_id)).order_by(GroupMessage.created_at)
 
         messages = await query.gino.load((GroupMessage, User.username)).all()
 
@@ -298,15 +304,15 @@ class ChatMessages(web.View):
                 [{
                     "id": message.id,
                     "text": message.text,
-                    "created_at": message.created_at,
+                    "created_at": arrow.get(message.created_at).format('hh:mm A'),
                     "username": username
                 } for message, username in messages],
                 many=True
             ).data)
 
     @docs(
-        tags=['message'],
-        summary='Create new message',
+        tags=['Messages'],
+        summary='Create a new message.',
         parameters=[{
             'in': 'header',
             'name': 'Authorization',
@@ -329,18 +335,23 @@ class ChatMessages(web.View):
                             "User is not in chat."}, status=403
             )
 
-        await GroupMessage.create(
+        message = await GroupMessage.create(
             text=self.request["data"]["text"],
             room_id=int(chat_id),
             user_id=user.id
         )
 
+        await GroupRoom.update.values(
+            last_message_at=message.created_at,
+            last_message_text=message.text
+        ).where(GroupRoom.id == int(chat_id)).gino.status()
+
         return web.json_response(status=201)
 
 
-class ChatMessageDetails(web.View):
-    @docs(tags=['message'],
-          summary='Update message',
+class ChatMessageDetails(web.View, CorsViewMixin):
+    @docs(tags=['Messages'],
+          summary='Update a message.',
           parameters=[{
               'in': 'header',
               'name': 'Authorization',
@@ -386,8 +397,8 @@ class ChatMessageDetails(web.View):
 
         return web.json_response(status=204)
 
-    @docs(tags=['message'],
-          summary='Delete message',
+    @docs(tags=['Messages'],
+          summary='Delete a message.',
           parameters=[{
               'in': 'header',
               'name': 'Authorization',
@@ -417,16 +428,29 @@ class ChatMessageDetails(web.View):
                 {'message': "Deleting another user's message is prohibited"},
                 status=403
             )
+        room_id = user_message.room_id
 
         try:
-            await GroupMessage.delete.where(
-                GroupMessage.id == request_message_id
-            ).gino.status()
+            await user_message.delete()
 
         except UniqueViolationError as ex:
             return web.json_response(
                 {'message': ex.as_dict()['detail']},
                 status=400
             )
+
+        last_message_at, last_message_text = await GroupMessage\
+            .select('created_at', 'text')\
+            .where(GroupMessage.room_id == room_id)\
+            .order_by(GroupMessage.created_at.desc())\
+            .gino\
+            .scalar()
+
+        print(last_message_at, last_message_text)
+
+        await GroupRoom.update.values(
+            last_message_at=last_message_at,
+            last_message_text=last_message_text
+        ).where(GroupRoom.id == room_id).gino.status()
 
         return web.json_response(status=204)

@@ -1,15 +1,20 @@
+import arrow
+
 from aiohttp import web
 from aiohttp_apispec import (
     docs, request_schema, response_schema, marshal_with
 )
+from aiohttp_cors import CorsViewMixin
 from asyncpg import ForeignKeyViolationError, UniqueViolationError
 from marshmallow import Schema, fields, validate
-from sqlalchemy import and_
 from passlib.hash import bcrypt
+from sqlalchemy import and_
 
-from ..models.user import User
-from ..models.contact import Contact
 from ..decorators import token_and_active_required
+from ..models.contact import Contact
+from ..models.group_membership import GroupMembership
+from ..models.group_room import GroupRoom
+from ..models.user import User
 
 
 class UserRequestSchema(Schema):
@@ -66,9 +71,16 @@ class PasswordChangeRequestSchema(Schema):
     )
 
 
-class UserList(web.View):
+class UserChatsResponseSchema(Schema):
+    id = fields.Int()
+    name = fields.Str()
+    last_message_at = fields.Str()
+    last_message_text = fields.Str()
+
+
+class UserList(web.View, CorsViewMixin):
     @docs(
-        tags=['User'],
+        tags=['Users'],
         summary="Return all users.",
         parameters=[
             {
@@ -116,8 +128,10 @@ class UserList(web.View):
             page = 1
             page_size = 10
 
-        # one page pagination limit
-        if page_size > 50:
+        if page < 1 or page > 50:
+            page = 50
+
+        if page_size < 1 or page_size > 50:
             page_size = 50
 
         username = query.get('username')
@@ -143,10 +157,10 @@ class UserList(web.View):
             ).data)
 
 
-class UserDetail(web.View):
+class UserDetail(web.View, CorsViewMixin):
     @docs(
-        tags=['User'],
-        summary='Fetch profile details by id',
+        tags=['Users'],
+        summary='Fetch profile details by id.',
         parameters=[{
             'in': 'header',
             'name': 'Authorization',
@@ -170,8 +184,8 @@ class UserDetail(web.View):
         )
 
     @docs(
-        tags=['User'],
-        summary='Edit my profile details',
+        tags=['Users'],
+        summary='Edit my profile details.',
         parameters=[{
             'in': 'header',
             'name': 'Authorization',
@@ -206,8 +220,8 @@ class UserDetail(web.View):
         return web.json_response(status=204)
 
     @docs(
-        tags=['User'],
-        summary='Delete my profile',
+        tags=['Users'],
+        summary='Delete my profile.',
         parameters=[{
             'in': 'header',
             'name': 'Authorization',
@@ -229,7 +243,7 @@ class UserDetail(web.View):
         return web.json_response(status=204)
 
 
-class ContactList(web.View):
+class ContactList(web.View, CorsViewMixin):
     @docs(
         tags=['Contacts'],
         summary='Create a new contact.',
@@ -307,7 +321,7 @@ class ContactList(web.View):
             ).data)
 
 
-class ContactDetail(web.View):
+class ContactDetail(web.View, CorsViewMixin):
     @docs(
         tags=['Contacts'],
         summary='Delete the specified contact.',
@@ -354,10 +368,10 @@ class ContactDetail(web.View):
         return web.json_response(status=204)
 
 
-class PasswordChange(web.View):
+class PasswordChange(web.View, CorsViewMixin):
     @docs(
-        tags=['PasswordChange'],
-        summary='Change user`s password',
+        tags=['Auth'],
+        summary="Change user's password.",
         parameters=[{
             'in': 'header',
             'name': 'Authorization',
@@ -415,3 +429,51 @@ class PasswordChange(web.View):
             )
 
         return web.json_response(status=204)
+
+
+class UserChats(web.View, CorsViewMixin):
+    @docs(
+        tags=['Chats'],
+        summary="Get a list of a user's chats.",
+        parameters=[{
+            'in': 'header',
+            'name': 'Authorization',
+            'schema': {'type': 'string'},
+            'required': 'true'
+        }]
+    )
+    @response_schema(UserChatsResponseSchema())
+    @token_and_active_required
+    async def get(self):
+        user = self.request["user"]
+        request_user_id = int(self.request.match_info.get('user_id'))
+
+        if user.id != request_user_id:
+            return web.json_response(
+                {"message": "Getting other's chats list is forbidden."},
+                status=403
+            )
+
+        query = User.outerjoin(
+            GroupMembership, onclause=(User.id == GroupMembership.user_id)
+        ).outerjoin(
+            GroupRoom, onclause=(
+                GroupRoom.id == GroupMembership.room_id)
+        ).select().where(
+            User.id == request_user_id
+        ).order_by(GroupRoom.last_message_at.desc())
+
+        users = await query.gino.load(User.distinct(User.id).load(add_room=GroupRoom)).all()
+
+        return web.json_response(
+            UserChatsResponseSchema().dump(
+                [{
+                    "id": room.id,
+                    "name": room.name,
+                    "last_message_at": arrow.get(room.last_message_at).humanize(),
+                    "last_message_text": room.last_message_text
+                } for room in sorted(
+                    users[0].rooms, key=lambda x: x.last_message_at, reverse=True
+                )],
+                many=True
+            ).data)

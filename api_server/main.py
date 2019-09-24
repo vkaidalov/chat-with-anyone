@@ -1,5 +1,6 @@
 from aiohttp import web
 from aiohttp_apispec import setup_aiohttp_apispec
+import aiohttp_cors
 
 from chat_with_anyone.db import db
 from chat_with_anyone.middlewares import setup_middlewares
@@ -21,6 +22,17 @@ setup_aiohttp_apispec(
     url="/api/docs/swagger.json",
     swagger_path="/api/docs"
 )
+
+cors = aiohttp_cors.setup(app, defaults={
+    "*": aiohttp_cors.ResourceOptions(
+        allow_credentials=True,
+        expose_headers="*",
+        allow_headers="*"
+    )
+})
+
+for route in list(app.router.routes()):
+    cors.add(route)
 
 if __name__ == "__main__":
     web.run_app(app)
