@@ -19,13 +19,6 @@ class ChatItem extends React.Component {
                             </div>
                         </div>
                     </div>
-                    <div className="dialog__options">
-                        <span className="option">
-                            <span className="option_icon"/>
-                            <span className="option_icon"/>
-                            <span className="option_icon"/>
-                        </span>
-                    </div>
                 </div>
             </li>
         );

@@ -5,7 +5,7 @@ import axios from "./axiosBaseInstance";
 
 import handleInputChange from "./utils";
 
-import UserIcon from "./user-icon.png";
+import UserIcon from "./true-user-icon.png";
 import "./HomePage.css";
 
 import ContactList from "./components/ContactList";

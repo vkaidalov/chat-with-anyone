@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import axios from "./axiosBaseInstance";
 import handleInputChange from "./utils";
 
-import UserIcon from "./user-icon.png";
+import UserIcon from "./true-user-icon.png";
 import "./SignInSignUpPage.css";
 
 class SignUpPage extends React.Component {

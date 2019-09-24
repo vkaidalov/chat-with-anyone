@@ -544,7 +544,7 @@ p {
 	color: #444B54;
 }
 .dialog__meta_message_p {
-	max-height: 44px;
+	height: 44px;
 	width: 80%;
 	min-width: 120px;
 	overflow: hidden;

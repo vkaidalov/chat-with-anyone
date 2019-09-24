@@ -1,5 +1,5 @@
 import React from "react";
-import UserIcon from "../user-icon.png";
+import UserIcon from "../true-user-icon.png";
 
 class ContactItem extends React.Component {
     render() {
