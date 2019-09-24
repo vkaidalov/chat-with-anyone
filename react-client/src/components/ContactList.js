@@ -6,14 +6,8 @@ class ContactList extends React.Component {
     render() {
         return (
             <ul className="contacts__list">
-                <ContactItem/>
-                <ContactItem/>
-                <ContactItem/>
-                <ContactItem/>
-                <ContactItem/>
-                <ContactItem/>
-                <ContactItem/>
-                <ContactItem/>
+                <ContactItem firstName="Ada" lastName="Lovelace" username="lovelace"/>
+                <ContactItem firstName="Zack" lastName="Rider" username="ZackRider"/>
             </ul>
         );
     }

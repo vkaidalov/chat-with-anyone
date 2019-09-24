@@ -20,6 +20,12 @@ class HomePage extends React.Component {
             username: '',
             firstName: '',
             lastName: '',
+            searchText: '',
+            showSearchResultsMode: false,
+            searchResultChats: [{
+                id: 0,
+                name: "search result chat #1"
+            }],
             chats: [{
                 id: 0,
                 name: 'chat #1',
@@ -48,19 +54,26 @@ class HomePage extends React.Component {
         this.handleChatItemClick = this.handleChatItemClick.bind(this);
         this.handleMenuToggleButtonClick = this.handleMenuToggleButtonClick.bind(this);
         this.handleSendMessageButtonClick = this.handleSendMessageButtonClick.bind(this);
+        this.handleCreateNewChatButtonClick = this.handleCreateNewChatButtonClick.bind(this);
+        this.handleLeaveChatButtonClick = this.handleLeaveChatButtonClick.bind(this);
+        this.handleJoinChatButtonClick = this.handleJoinChatButtonClick.bind(this);
+        this.handleSearchFormSubmit = this.handleSearchFormSubmit.bind(this);
         this.handleSignOutButtonClick = this.handleSignOutButtonClick.bind(this);
     }
 
     componentDidMount() {
         this.timerID = setInterval(
-          () => {
-              if (this.state.isChatSelected) {
-                  this.fetchSelectedChatMessages(
-                      this.state.selectedChat.id
-                  )
-              }
-          },
-          1000
+            () => {
+                if (!this.state.showSearchResultsMode) {
+                    this.fetchUserChats();
+                    if (this.state.isChatSelected) {
+                        this.fetchSelectedChatMessages(
+                            this.state.selectedChat.id
+                        )
+                    }
+                }
+            },
+            1000
         );
     }
 
@@ -94,11 +107,7 @@ class HomePage extends React.Component {
         })
             .then(response => {
                 this.setState({
-                    chats: response.data.sort(
-                        (a, b) => (a["last_message_at"] > b["last_message_at"]) ? 1 : (
-                            (b["last_message_at"] > a["last_message_at"]) ? -1 : 0
-                        )
-                    ).reverse()
+                    chats: response.data
                 });
             })
             .catch(() => {
@@ -122,7 +131,10 @@ class HomePage extends React.Component {
     }
 
     handleChatItemClick(_event, chatId) {
-        const selectedChat = this.state.chats.find((element, _index, _array) => {
+        const chats = this.state.showSearchResultsMode ?
+            this.state.searchResultChats : this.state.chats;
+
+        const selectedChat = chats.find((element, _index, _array) => {
             return element.id === chatId;
         });
         const selectedChatId = selectedChat.id;
@@ -135,11 +147,18 @@ class HomePage extends React.Component {
                 name: selectedChatName
             }
         });
-        this.fetchSelectedChatMessages(selectedChatId);
+
+        if (this.state.showSearchResultsMode) {
+            this.setState({
+                selectedChatMessages: []
+            });
+        } else {
+            this.fetchSelectedChatMessages(selectedChatId);
+        }
     }
 
-    handleSendMessageButtonClick(_event) {
-        _event.preventDefault();
+    handleSendMessageButtonClick(event) {
+        event.preventDefault();
         const token = localStorage.getItem("token");
         const chatId = this.state.selectedChat.id;
         const text = this.state.newMessageText;
@@ -155,6 +174,85 @@ class HomePage extends React.Component {
             .catch(_error => {
                 alert("Error while sending your message.");
             });
+    }
+
+    handleCreateNewChatButtonClick(_event) {
+        const chatName = prompt("Enter a name for a new chat:");
+        if (!chatName) {
+            return;
+        }
+        const token = localStorage.getItem("token");
+        axios.post(`api/chats/`, {name: chatName}, {
+            headers: {"Authorization": token}
+        })
+            .then(_response => {
+                this.fetchUserChats();
+            })
+            .catch(_error => {
+                alert("Error while creating a new chat.");
+            });
+    }
+
+    handleLeaveChatButtonClick(_event) {
+        if (!window.confirm("Are you sure you want to leave this chat?")) {
+            return;
+        }
+        this.setState({
+            isChatSelected: false
+        });
+        const userId = localStorage.getItem("userId");
+        const token = localStorage.getItem("token");
+        const chatId = this.state.selectedChat.id;
+        axios.delete(`api/chats/${chatId}/users/${userId}`, {
+            headers: {"Authorization": token}
+        })
+            .then(_response => {
+                // nothing!
+            })
+            .catch(_error => {
+                alert("Error while leaving the selected chat.");
+            });
+    }
+
+    handleJoinChatButtonClick(_event) {
+        const userId = localStorage.getItem("userId");
+        const token = localStorage.getItem("token");
+        const chatId = this.state.selectedChat.id;
+        axios.post(`api/chats/${chatId}/users/`, {
+            user_id: userId
+        }, {
+            headers: {"Authorization": token}
+        })
+            .then(_response => {
+                alert("You've successfully joined the chat!");
+            })
+            .catch(_error => {
+                alert("Error while joining the chat. Haven't you joined it yet?");
+            });
+    }
+
+    handleSearchFormSubmit(event) {
+        event.preventDefault();
+        if (this.state.searchText === "") {
+            this.setState({
+                isChatSelected: false,
+                showSearchResultsMode: false
+            });
+            return;
+        }
+        this.setState({
+            isChatSelected: false,
+            showSearchResultsMode: true
+        });
+        const token = localStorage.getItem("token");
+        axios.get(`api/chats/?name=${this.state.searchText}`, {
+            headers: {"Authorization": token}
+        })
+            .then(response => {
+                this.setState({
+                    searchResultChats: response.data
+                });
+            })
     }
 
     handleSignOutButtonClick(_event) {
@@ -233,9 +331,12 @@ class HomePage extends React.Component {
                             </div>
                         </div>
                         <div className="search">
-                            <form className="toolbar__wrapper shadow">
+                            <form className="toolbar__wrapper shadow" onSubmit={this.handleSearchFormSubmit}>
                                 <div className="input-field">
-                                    <input type="search" className="validate" placeholder="Search"/>
+                                    <input
+                                        name="searchText" onChange={this.handleInputChange}
+                                        type="search" className="validate" placeholder="Search"
+                                    />
                                 </div>
                             </form>
                         </div>
@@ -257,15 +358,6 @@ class HomePage extends React.Component {
                                     <Link to={`${this.props.match.url}/chats`}>Chats</Link>
                                 </span>
                             </label>
-
-                            <input name="bar" className="toolbar__item_input" id="stranger" type="radio"/>
-                            <label className="toolbar__item_label" htmlFor="stranger">
-                                <span>
-                                    <Link to={`${this.props.match.url}/stranger`}>Stranger</Link>
-                                </span>
-                            </label>
-
-                            <div className="toolbar__selected-line"/>
                         </div>
                     </div>
 
@@ -273,21 +365,71 @@ class HomePage extends React.Component {
                         <Route path={`${this.props.match.url}/contacts`} component={ContactList}/>
                         <Route path={`${this.props.match.url}/chats`}
                                render={
-                                   () => <ChatList
-                                       chats={this.state.chats} handleChatItemClick={this.handleChatItemClick}
-                                   />
+                                   () => this.state.showSearchResultsMode ? (
+                                       <div>
+                                           <ChatList
+                                               chats={this.state.searchResultChats}
+                                               handleChatItemClick={this.handleChatItemClick}
+                                           />
+                                       </div>
+                                   ) : (
+                                       <div>
+                                           <button
+                                               className="btn waves-effect waves-light"
+                                               onClick={this.handleCreateNewChatButtonClick}
+                                               style={{
+                                                   zIndex: 0,
+                                                   margin: "10px 10px",
+                                                   width: "96%"
+                                               }}
+                                           >
+                                               Create New Chat
+                                           </button>
+                                           <ChatList
+                                               chats={this.state.chats}
+                                               handleChatItemClick={this.handleChatItemClick}
+                                           />
+                                       </div>
+                                   )
                                }
                         />
                     </div>
                 </div>
 
                 {this.state.isChatSelected ? (<div className="right-area messenger">
-                    <div className="messenger__chat-meta">
+                    <div className="messenger__chat-meta" style={{justifyContent: "space-between"}}>
                         <div className="chat-meta__info">
                             <h3 className="chat-meta__info_title">
                                 {this.state.selectedChat.name}
                             </h3>
                         </div>
+                        {this.state.showSearchResultsMode ? (
+                            <button
+                                className="btn waves-effect waves-light"
+                                onClick={this.handleJoinChatButtonClick}
+                                style={{
+                                    zIndex: 0,
+                                    margin: "10px 10px",
+                                    float: "right",
+                                    backgroundColor: "green"
+                                }}
+                            >
+                                Join Chat
+                            </button>
+                        ) : (
+                            <button
+                                className="btn waves-effect waves-light"
+                                onClick={this.handleLeaveChatButtonClick}
+                                style={{
+                                    zIndex: 0,
+                                    margin: "10px 10px",
+                                    float: "right",
+                                    backgroundColor: "IndianRed"
+                                }}
+                            >
+                                Leave Chat
+                            </button>
+                        )}
                     </div>
 
                     <div className="messenger__messages">
@@ -301,11 +443,13 @@ class HomePage extends React.Component {
                                     id="textarea" className="materialize-textarea"
                                     name="newMessageText" onChange={this.handleInputChange}
                                     value={this.state.newMessageText}
+                                    disabled={this.state.showSearchResultsMode}
                                 />
                             </div>
                             <button
                                 className="text-area_button"
                                 onClick={this.handleSendMessageButtonClick}
+                                disabled={this.state.showSearchResultsMode}
                             />
                         </form>
                     </div>

@@ -33,7 +33,7 @@ def setup_routes(app):
         web.view('/api/chats/', Chats),
         web.view(r'/api/chats/{chat_id:\d+}/users/', ChatUserList),
         web.view(
-            r'/api/chats/{chat_id:\d+}/users/{user_id:\d+}/',
+            r'/api/chats/{chat_id:\d+}/users/{user_id:\d+}',
             ChatUserDetails
         ),
 
