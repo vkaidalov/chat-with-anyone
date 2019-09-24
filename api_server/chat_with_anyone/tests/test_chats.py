@@ -186,7 +186,7 @@ async def test_delete_message(cli, additional_message):
     assert await resp.text() == '{"message": "Deleting another user\'s ' \
                                 'message is prohibited"}'
 
-    # resp = await cli.delete('/api/chats/1/messages/1',
-    #                         headers={'Authorization': TOKEN})
-    #
-    # assert resp.status == 204
+    resp = await cli.delete('/api/chats/1/messages/1',
+                            headers={'Authorization': TOKEN})
+
+    assert resp.status == 204
