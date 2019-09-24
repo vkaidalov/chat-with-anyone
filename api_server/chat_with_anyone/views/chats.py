@@ -441,8 +441,6 @@ class ChatMessageDetails(web.View, CorsViewMixin):
             .gino\
             .first()
 
-        print(last_message_at, last_message_text)
-
         await GroupRoom.update.values(
             last_message_at=last_message_at,
             last_message_text=last_message_text
