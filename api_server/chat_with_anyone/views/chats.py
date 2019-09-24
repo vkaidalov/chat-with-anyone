@@ -439,7 +439,7 @@ class ChatMessageDetails(web.View, CorsViewMixin):
             .where(GroupMessage.room_id == room_id)\
             .order_by(GroupMessage.created_at.desc())\
             .gino\
-            .scalar()
+            .first()
 
         print(last_message_at, last_message_text)
 
