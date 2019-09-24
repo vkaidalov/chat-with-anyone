@@ -12,8 +12,12 @@ class ContactItem extends React.Component {
                         </div>
                         <div className="dialog__meta">
                             <div className="user-info">
-                                <span className="user-info__name">firstName lastName</span>
-                                <span className="user-info__time">username</span>
+                                <span className="user-info__name">
+                                    {this.props["firstName"]} {this.props["lastName"]}
+                                </span>
+                                <span className="user-info__time">
+                                    {this.props["username"]}
+                                </span>
                             </div>
                         </div>
                     </div>

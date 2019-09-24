@@ -27,7 +27,7 @@ class SignUpPage extends React.Component {
             password: this.state.password
         };
         axios.post("api/signup", data)
-            .then(response => {
+            .then(_response => {
                 alert("Check your mail and confirm registration.");
                 this.props.history.push("/");
             })
