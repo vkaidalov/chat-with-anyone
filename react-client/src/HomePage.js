@@ -22,9 +22,21 @@ class HomePage extends React.Component {
             lastName: '',
             searchText: '',
             showSearchResultsMode: false,
+            searchResultUsers: [{
+                id: 0,
+                username: "username",
+                first_name: "firstName",
+                last_name: "lastName"
+            }],
             searchResultChats: [{
                 id: 0,
                 name: "search result chat #1"
+            }],
+            contacts: [{
+                id: 0,
+                username: "username",
+                first_name: "firstName",
+                last_name: "lastName"
             }],
             chats: [{
                 id: 0,
@@ -47,10 +59,12 @@ class HomePage extends React.Component {
         };
 
         this.fetchUserDetail();
+        this.fetchUserContacts();
         this.fetchUserChats();
 
         this.handleInputChange = handleInputChange.bind(this);
 
+        this.handleContactSpecialButtonClick = this.handleContactSpecialButtonClick.bind(this);
         this.handleChatItemClick = this.handleChatItemClick.bind(this);
         this.handleMenuToggleButtonClick = this.handleMenuToggleButtonClick.bind(this);
         this.handleSendMessageButtonClick = this.handleSendMessageButtonClick.bind(this);
@@ -100,6 +114,22 @@ class HomePage extends React.Component {
             });
     }
 
+    fetchUserContacts() {
+        const userId = localStorage.getItem("userId");
+        const token = localStorage.getItem("token");
+        axios.get(`api/users/${userId}/contacts/`, {
+            headers: {"Authorization": token}
+        })
+            .then(response => {
+                this.setState({
+                    contacts: response.data
+                });
+            })
+            .catch(() => {
+                alert("Error while fetching the user's contacts.");
+            });
+    }
+
     fetchUserChats() {
         const userId = localStorage.getItem("userId");
         const token = localStorage.getItem("token");
@@ -129,6 +159,10 @@ class HomePage extends React.Component {
             .catch(() => {
                 alert("Error while fetching your chats.");
             });
+    }
+
+    handleContactSpecialButtonClick(_event, contactId) {
+        console.log(contactId);
     }
 
     handleChatItemClick(_event, chatId) {
@@ -246,6 +280,16 @@ class HomePage extends React.Component {
             showSearchResultsMode: true
         });
         const token = localStorage.getItem("token");
+
+        axios.get(`api/users/?username=${this.state.searchText}`, {
+            headers: {"Authorization": token}
+        })
+            .then(response => {
+                this.setState({
+                    searchResultUsers: response.data
+                });
+            });
+
         axios.get(`api/chats/?name=${this.state.searchText}`, {
             headers: {"Authorization": token}
         })
@@ -253,7 +297,7 @@ class HomePage extends React.Component {
                 this.setState({
                     searchResultChats: response.data
                 });
-            })
+            });
     }
 
     handleSignOutButtonClick(_event) {
@@ -281,12 +325,12 @@ class HomePage extends React.Component {
         }, {
             headers: {"Authorization": token}
         })
-        .then(_response => {
-            alert("Changes were successfully applied.");
-        })
-        .catch(error => {
-            alert(error.response.data["message"]);
-        });
+            .then(_response => {
+                alert("Changes were successfully applied.");
+            })
+            .catch(error => {
+                alert(error.response.data["message"]);
+            });
     }
 
     handleMenuToggleButtonClick(_event) {
@@ -379,7 +423,9 @@ class HomePage extends React.Component {
                     <div className="toolbar">
                         <div className="toolbar__wrapper shadow">
                             <input name="bar" className="toolbar__item_input" id="contacts" type="radio"/>
-                            <label className="toolbar__item_label" htmlFor="contacts" onClick={(e) => {e.preventDefault()} }>
+                            <label className="toolbar__item_label" htmlFor="contacts" onClick={(e) => {
+                                e.preventDefault()
+                            }}>
                                 <span>
                                     <Link to={`${this.props.match.url}/contacts`}
                                           className="contacts"
@@ -390,7 +436,9 @@ class HomePage extends React.Component {
 
                             <input name="bar" className="toolbar__item_input" id="chats" type="radio"
                                    defaultChecked={true}/>
-                            <label className="toolbar__item_label" htmlFor="chats" onClick={(e) => {e.preventDefault()} }>
+                            <label className="toolbar__item_label" htmlFor="chats" onClick={(e) => {
+                                e.preventDefault()
+                            }}>
                                 <span>
                                     <Link to={`${this.props.match.url}/chats`}
                                           className="chats"
@@ -404,7 +452,20 @@ class HomePage extends React.Component {
                     </div>
 
                     <div className="tab-item-list-area">
-                        <Route path={`${this.props.match.url}/contacts`} component={ContactList}/>
+                        <Route path={`${this.props.match.url}/contacts`}
+                               render={
+                                   () => <ContactList
+                                       contacts={
+                                           this.state.showSearchResultsMode ?
+                                               this.state.searchResultUsers :
+                                               this.state.contacts
+                                       }
+                                       showSearchResultsMode={this.state.showSearchResultsMode}
+                                       isChatSelected={this.state.isChatSelected}
+                                       handleContactSpecialButtonClick={this.handleContactSpecialButtonClick}
+                                   />
+                               }
+                        />
                         <Route path={`${this.props.match.url}/chats`}
                                render={
                                    () => this.state.showSearchResultsMode ? (

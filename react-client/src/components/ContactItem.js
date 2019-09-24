@@ -21,13 +21,36 @@ class ContactItem extends React.Component {
                             </div>
                         </div>
                     </div>
-                    <div className="dialog__options">
-                        <span className="option">
-                            <span className="option_icon"/>
-                            <span className="option_icon"/>
-                            <span className="option_icon"/>
-                        </span>
-                    </div>
+                    {this.props["showSearchResultsMode"] ? (
+                        <button
+                            className="btn waves-effect waves-light"
+                            onClick={
+                                (e) => this.props["handleContactSpecialButtonClick"](e, this.props["id"])
+                            }
+                            style={{
+                                zIndex: 0,
+                                margin: "10px 10px",
+                                backgroundColor: "green"
+                            }}
+                        >
+                            Add to Contacts
+                        </button>
+                    ) : (
+                        <button
+                            className="btn waves-effect waves-light"
+                            onClick={
+                                (e) => this.props["handleContactSpecialButtonClick"](e, this.props["id"])
+                            }
+                            style={{
+                                zIndex: 0,
+                                margin: "10px 10px",
+                                backgroundColor: "green"
+                            }}
+                            disabled={this.props["isChatSelected"]}
+                        >
+                            Add to selected chat
+                        </button>
+                    )}
                 </div>
             </li>
         );
