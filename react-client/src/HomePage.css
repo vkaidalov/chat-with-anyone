@@ -152,7 +152,7 @@ body {
     position: absolute;
     top: -24px;
     left: -340px;
-    width: 270px;
+    width: 370px;
     height: 96vh;
     background-color: #FBF9F8;
     z-index: 1;
@@ -398,9 +398,9 @@ TOOLBAR
 	position: absolute;
 	width: 20%;
 	border-radius: 6px;
-	border: 1px solid #90F0CE;
+	border: 2px solid #90F0CE;
 	background-color: #90f0ce;
-	top: 66%;
+	top: 70%;
 	height: 3px;
 	box-shadow: 0 2px 2px 0 rgba(0,0,0,0.2), 0 0 2px 0 rgba(0,0,0,0.2);
 	transition: all 200ms ease-out;
@@ -423,9 +423,13 @@ TOOLBAR
 	width: 100%;
 	height: 88%;
 }
-.toolbar__item_label > span {
+
+.toolbar__item_label:nth-last-child(2) {
+	border-right: none;
+}
+
+.toolbar__item_label > span > a {
 	position: relative;
-	top: 25%;
     font-family: Lato, serif;
 	font-weight: bold;
 	font-size: 18px;
@@ -444,23 +448,17 @@ input[type=radio]:checked + label > span{
 }
 
 .toolbar__item_input#contacts:checked ~ .toolbar__selected-line {
-	background-color: #90f0ce;
-	border: 1px solid #90F0CE;
-	transform: translate3d(2.2rem,0,0);
+	transform: translate3d(5.4rem,0,0);
 	transition: all 200ms ease-out;
 }
 
-.toolbar__item_input#chats:checked  ~ .toolbar__selected-line{
-	background-color: #90f0ce;
-	border: 1px solid #90F0CE;
+.toolbar__item_input#chats:checked  ~ .toolbar__selected-line {
 	left: 130px;
-	transform: translate3d(6rem,0,0);
+	transform: translate3d(15.3rem,0,0);
 	transition: all 200ms ease-out;
 }
 
 .toolbar__item_input#stranger:checked ~ .toolbar__selected-line {
-	background-color: #90f0ce;
-	border: 1px solid #90F0CE;
 	transform: translate3d(27.2rem,0,0);
 	transition: all 200ms ease-out;
 }

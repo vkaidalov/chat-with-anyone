@@ -59,6 +59,7 @@ class HomePage extends React.Component {
         this.handleJoinChatButtonClick = this.handleJoinChatButtonClick.bind(this);
         this.handleSearchFormSubmit = this.handleSearchFormSubmit.bind(this);
         this.handleSignOutButtonClick = this.handleSignOutButtonClick.bind(this);
+        this.handleEditProfileFormSubmit = this.handleEditProfileFormSubmit.bind(this);
     }
 
     componentDidMount() {
@@ -268,7 +269,50 @@ class HomePage extends React.Component {
             });
     }
 
+    handleEditProfileFormSubmit(_event) {
+        _event.preventDefault();
+        const userId = localStorage.getItem("userId");
+        const token = localStorage.getItem("token");
+
+        var old_data = {
+            username: '',
+            firstName: '',
+            lastName: ''
+        };
+        // check current (old) data in db
+        axios.get(`api/users/${userId}`, {
+            headers: {"Authorization": token}
+        })
+            .then(response => {
+                old_data.username = response.data["username"];
+                old_data.firstName = response.data["first_name"];
+                old_data.lastName = response.data["last_name"];
+            
+            })
+            .catch(() => {
+                alert("Error while fetching the user's detail.");
+            });
+        // if new data is equal to old, then send blank string
+        const data = {
+            username: this.state.username === old_data.username ? "" : this.state.username,
+            first_name: this.state.firstName === old_data.firstName ? "" : this.state.firstName,
+            last_name: this.state.lastName === old_data.lastName ? "" : this.state.lastName
+        };
+
+        axios.patch(`api/users/${userId}`, data, {
+            headers: {"Authorization": token}
+        })
+        .then(response => {
+            alert("Changes were successfully applied.");
+        })
+        .catch(error => {
+            alert(error.response.data["message"]);
+        });
+    }
+
     handleMenuToggleButtonClick(_event) {
+        this.fetchUserDetail();
+
         let toggleBlock = document.getElementById('menu__toggle_block');
         let toggleButton = document.getElementById('menu__toggle_button');
         let toggleButtonInput = document.getElementById('menu__toggle_input');
@@ -277,13 +321,17 @@ class HomePage extends React.Component {
             toggleBlock.style.left = '-24px';
             toggleBlock.style.opacity = '1';
             toggleButton.style.zIndex = '2';
-            toggleButton.style.left = '168px';
+            toggleButton.style.left = '268px';
         } else if (!toggleButtonInput.checked) {
             toggleBlock.style.left = '-340px';
             toggleBlock.style.opacity = '0';
             toggleButton.style.zIndex = '1';
             toggleButton.style.left = '0';
         }
+    }
+
+    handleToolbarLinkClick() {
+        document.getElementById(this.className).checked = true;
     }
 
     render() {
@@ -305,20 +353,29 @@ class HomePage extends React.Component {
                                 <div className="user-icon">
                                     <img src={UserIcon} alt=""/>
                                 </div>
-                                <form className="form">
+                                <form className="form" onSubmit={this.handleEditProfileFormSubmit}>
                                     <div className="form__item">
                                         <label className="form__item_label" htmlFor="username">Username:</label>
                                         <input className="form__item_input validate"
+                                               onChange={this.handleInputChange}
+                                               value={this.state.username}
+                                               name="username"
                                                id="username" placeholder="Username" type="text"/>
                                     </div>
                                     <div className="form__item">
                                         <label className="form__item_label" htmlFor="first-name">First name:</label>
                                         <input className="form__item_input validate"
+                                               onChange={this.handleInputChange}
+                                               value={this.state.firstName}
+                                               name="firstName"
                                                id="first-name" placeholder="First name" type="text"/>
                                     </div>
                                     <div className="form__item">
                                         <label className="form__item_label" htmlFor="last-name">Last name:</label>
                                         <input className="form__item_input validate"
+                                               onChange={this.handleInputChange}
+                                               value={this.state.lastName}
+                                               name="lastName"
                                                id="last-name" placeholder="Last name" type="text"/>
                                     </div>
                                     <button type="submit" className="form__item btn waves-effect waves-light">Edit
@@ -345,19 +402,27 @@ class HomePage extends React.Component {
                     <div className="toolbar">
                         <div className="toolbar__wrapper shadow">
                             <input name="bar" className="toolbar__item_input" id="contacts" type="radio"/>
-                            <label className="toolbar__item_label" htmlFor="contacts">
+                            <label className="toolbar__item_label" htmlFor="contacts" onClick={(e) => {e.preventDefault()} }>
                                 <span>
-                                    <Link to={`${this.props.match.url}/contacts`}>Contacts</Link>
+                                    <Link to={`${this.props.match.url}/contacts`}
+                                          className="contacts"
+                                          onClick={this.handleToolbarLinkClick}
+                                    >Contacts</Link>
                                 </span>
                             </label>
 
                             <input name="bar" className="toolbar__item_input" id="chats" type="radio"
                                    defaultChecked={true}/>
-                            <label className="toolbar__item_label" htmlFor="chats">
+                            <label className="toolbar__item_label" htmlFor="chats" onClick={(e) => {e.preventDefault()} }>
                                 <span>
-                                    <Link to={`${this.props.match.url}/chats`}>Chats</Link>
+                                    <Link to={`${this.props.match.url}/chats`}
+                                          className="chats"
+                                          onClick={this.handleToolbarLinkClick}
+                                    >Chats</Link>
                                 </span>
                             </label>
+
+                            <div className="toolbar__selected-line"/>
                         </div>
                     </div>
 
