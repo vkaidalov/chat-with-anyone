@@ -161,8 +161,55 @@ class HomePage extends React.Component {
             });
     }
 
-    handleContactSpecialButtonClick(_event, contactId) {
-        console.log(contactId);
+    handleContactSpecialButtonClick(_event, contactId, deleteMode) {
+        const userId = localStorage.getItem("userId");
+        const token = localStorage.getItem("token");
+        if (this.state.showSearchResultsMode) {
+            // adding a user to the user's contact list
+            axios.post(`api/users/${userId}/contacts/`, {
+                contact_id: contactId
+            }, {
+                headers: {"Authorization": token}
+            })
+                .then(_response => {
+                    alert("The user has been successfully added to your contact list.");
+                    this.fetchUserContacts();
+                })
+                .catch(_error => {
+                    alert("Error while adding the user to your contact list. " +
+                        "You've done it already, haven't you?"
+                    );
+                });
+        } else {
+            if (deleteMode) {
+                // deleting a user from the user's contact list
+                axios.delete(`api/users/${userId}/contacts/${contactId}`, {
+                    headers: {"Authorization": token}
+                })
+                    .then(_response => {
+                        alert("The user has been successfully deleted from your contact list.");
+                        this.fetchUserContacts();
+                    })
+                    .catch(_error => {
+                        alert("Error while deleting the user from your contact list.");
+                    });
+            } else {
+                // adding a user to the selected chat
+                axios.post(`api/chats/${this.state.selectedChat.id}/users/`, {
+                    user_id: contactId
+                }, {
+                    headers: {"Authorization": token}
+                })
+                    .then(_response => {
+                        alert("The user has been successfully added to the selected chat on the right.");
+                    })
+                    .catch(_error => {
+                        alert("Error while adding the user to the selected chat on the right. " +
+                            "You've done it already, haven't you?"
+                        );
+                    });
+            }
+        }
     }
 
     handleChatItemClick(_event, chatId) {

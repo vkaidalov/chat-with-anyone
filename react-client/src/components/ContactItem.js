@@ -25,7 +25,7 @@ class ContactItem extends React.Component {
                         <button
                             className="btn waves-effect waves-light"
                             onClick={
-                                (e) => this.props["handleContactSpecialButtonClick"](e, this.props["id"])
+                                (e) => this.props["handleContactSpecialButtonClick"](e, this.props["id"], false)
                             }
                             style={{
                                 zIndex: 0,
@@ -36,20 +36,35 @@ class ContactItem extends React.Component {
                             Add to Contacts
                         </button>
                     ) : (
-                        <button
-                            className="btn waves-effect waves-light"
-                            onClick={
-                                (e) => this.props["handleContactSpecialButtonClick"](e, this.props["id"])
-                            }
-                            style={{
-                                zIndex: 0,
-                                margin: "10px 10px",
-                                backgroundColor: "green"
-                            }}
-                            disabled={this.props["isChatSelected"]}
-                        >
-                            Add to selected chat
-                        </button>
+                        <div>
+                            <button
+                                className="btn waves-effect waves-light"
+                                onClick={
+                                    (e) => this.props["handleContactSpecialButtonClick"](e, this.props["id"], false)
+                                }
+                                style={{
+                                    zIndex: 0,
+                                    margin: "10px 10px",
+                                    backgroundColor: "green"
+                                }}
+                                disabled={!this.props["isChatSelected"]}
+                            >
+                                Add to selected chat
+                            </button>
+                            <button
+                                className="btn waves-effect waves-light"
+                                onClick={
+                                    (e) => this.props["handleContactSpecialButtonClick"](e, this.props["id"], true)
+                                }
+                                style={{
+                                    zIndex: 0,
+                                    margin: "10px 10px",
+                                    backgroundColor: "IndianRed"
+                                }}
+                            >
+                                Delete Contact
+                            </button>
+                        </div>
                     )}
                 </div>
             </li>
