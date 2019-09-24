@@ -269,40 +269,19 @@ class HomePage extends React.Component {
             });
     }
 
-    handleEditProfileFormSubmit(_event) {
-        _event.preventDefault();
+    handleEditProfileFormSubmit(event) {
+        event.preventDefault();
         const userId = localStorage.getItem("userId");
         const token = localStorage.getItem("token");
 
-        var old_data = {
-            username: '',
-            firstName: '',
-            lastName: ''
-        };
-        // check current (old) data in db
-        axios.get(`api/users/${userId}`, {
+        axios.patch(`api/users/${userId}`, {
+            username: this.state.username,
+            first_name: this.state.firstName,
+            last_name: this.state.lastName
+        }, {
             headers: {"Authorization": token}
         })
-            .then(response => {
-                old_data.username = response.data["username"];
-                old_data.firstName = response.data["first_name"];
-                old_data.lastName = response.data["last_name"];
-            
-            })
-            .catch(() => {
-                alert("Error while fetching the user's detail.");
-            });
-        // if new data is equal to old, then send blank string
-        const data = {
-            username: this.state.username === old_data.username ? "" : this.state.username,
-            first_name: this.state.firstName === old_data.firstName ? "" : this.state.firstName,
-            last_name: this.state.lastName === old_data.lastName ? "" : this.state.lastName
-        };
-
-        axios.patch(`api/users/${userId}`, data, {
-            headers: {"Authorization": token}
-        })
-        .then(response => {
+        .then(_response => {
             alert("Changes were successfully applied.");
         })
         .catch(error => {
@@ -311,8 +290,6 @@ class HomePage extends React.Component {
     }
 
     handleMenuToggleButtonClick(_event) {
-        this.fetchUserDetail();
-
         let toggleBlock = document.getElementById('menu__toggle_block');
         let toggleButton = document.getElementById('menu__toggle_button');
         let toggleButtonInput = document.getElementById('menu__toggle_input');
