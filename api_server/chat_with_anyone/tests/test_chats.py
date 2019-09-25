@@ -147,7 +147,7 @@ async def test_create_message(cli, additional_chat):
                                 'User is not in chat."}'
 
 
-async def test_update_message(cli, additional_message):
+async def test_update_message(cli, message_in_additional_chat):
     resp = await cli.patch('/api/chats/1/messages/1',
                            json={'text': 'test_data'},
                            headers={'Authorization': TOKEN})
@@ -171,15 +171,16 @@ async def test_update_message(cli, additional_message):
                                 'message is prohibited"}'
 
 
-async def test_delete_message(cli, additional_message):
-    resp = await cli.delete('/api/chats/1/messages/2',
+async def test_delete_message(cli, additional_message,
+                              message_in_additional_chat):
+    resp = await cli.delete('/api/chats/1/messages/3',
                             headers={'Authorization': TOKEN})
 
     assert resp.status == 404
     assert await resp.text() == '{"message": ' \
                                 '"Message not found. Incorrect id"}'
 
-    resp = await cli.delete('/api/chats/2/messages/2',
+    resp = await cli.delete('/api/chats/2/messages/3',
                             headers={'Authorization': TOKEN})
 
     assert resp.status == 403

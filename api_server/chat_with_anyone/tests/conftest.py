@@ -135,7 +135,18 @@ async def message(chat):
 
 
 @pytest.fixture
-async def additional_message(additional_chat, message):
+async def additional_message(message):
+    await GroupMessage.create(
+        text="test_data2",
+        room_id=1,
+        user_id=1,
+        created_at=datetime(year=2019, month=10, day=2,
+                            hour=13, minute=0, second=0)
+    )
+
+
+@pytest.fixture
+async def message_in_additional_chat(additional_chat, message):
     await GroupMessage.create(
         text="test_data2",
         room_id=2,
