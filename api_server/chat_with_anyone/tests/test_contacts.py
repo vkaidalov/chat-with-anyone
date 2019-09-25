@@ -33,17 +33,16 @@ async def test_create_contact(cli, user, additional_user):
 
 
 async def test_get_contacts(cli, user, contact):
-    resp = await cli.get('/api/users/1/contacts/',
-                         headers={'Authorization': TOKEN})
     response_json = [{"first_name": "test_data2", "id": 2,
                       "last_name": "test_data2", "username": "test_data2"}]
 
+    resp = await cli.get('/api/users/1/contacts/',
+                         headers={'Authorization': TOKEN})
     assert resp.status == 200
     assert await resp.json() == response_json
 
     resp = await cli.get('/api/users/2/contacts/',
                          headers={'Authorization': TOKEN})
-
     assert resp.status == 403
     assert await resp.text() == '{"message": "Getting other\'s ' \
                                 'contact list is forbidden."}'

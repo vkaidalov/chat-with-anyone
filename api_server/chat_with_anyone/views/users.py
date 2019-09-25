@@ -128,11 +128,17 @@ class UserList(web.View, CorsViewMixin):
             page = 1
             page_size = 10
 
-        if page < 1 or page > 50:
+        if page > 50:
             page = 50
 
-        if page_size < 1 or page_size > 50:
+        if page < 1:
+            page = 1
+
+        if page_size > 50:
             page_size = 50
+
+        if page_size < 1:
+            page_size = 1
 
         username = query.get('username')
         first_name = query.get('first_name')
