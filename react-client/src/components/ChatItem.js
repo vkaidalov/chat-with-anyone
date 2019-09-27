@@ -14,17 +14,10 @@ class ChatItem extends React.Component {
                             </div>
                             <div className="dialog__meta_message">
                                 <p className="dialog__meta_message_p">
-                                    {this.props["lastMessageText"] || "last message text"}
+                                    {this.props["lastMessageText"] || ""}
                                 </p>
                             </div>
                         </div>
-                    </div>
-                    <div className="dialog__options">
-                        <span className="option">
-                            <span className="option_icon"/>
-                            <span className="option_icon"/>
-                            <span className="option_icon"/>
-                        </span>
                     </div>
                 </div>
             </li>

@@ -5,7 +5,7 @@ import axios from "./axiosBaseInstance";
 
 import handleInputChange from "./utils";
 
-import UserIcon from "./user-icon.png";
+import UserIcon from "./true-user-icon.png";
 import "./HomePage.css";
 
 import ContactList from "./components/ContactList";
@@ -22,9 +22,21 @@ class HomePage extends React.Component {
             lastName: '',
             searchText: '',
             showSearchResultsMode: false,
+            searchResultUsers: [{
+                id: 0,
+                username: "username",
+                first_name: "firstName",
+                last_name: "lastName"
+            }],
             searchResultChats: [{
                 id: 0,
                 name: "search result chat #1"
+            }],
+            contacts: [{
+                id: 0,
+                username: "username",
+                first_name: "firstName",
+                last_name: "lastName"
             }],
             chats: [{
                 id: 0,
@@ -47,10 +59,12 @@ class HomePage extends React.Component {
         };
 
         this.fetchUserDetail();
+        this.fetchUserContacts();
         this.fetchUserChats();
 
         this.handleInputChange = handleInputChange.bind(this);
 
+        this.handleContactSpecialButtonClick = this.handleContactSpecialButtonClick.bind(this);
         this.handleChatItemClick = this.handleChatItemClick.bind(this);
         this.handleMenuToggleButtonClick = this.handleMenuToggleButtonClick.bind(this);
         this.handleSendMessageButtonClick = this.handleSendMessageButtonClick.bind(this);
@@ -100,6 +114,22 @@ class HomePage extends React.Component {
             });
     }
 
+    fetchUserContacts() {
+        const userId = localStorage.getItem("userId");
+        const token = localStorage.getItem("token");
+        axios.get(`api/users/${userId}/contacts/`, {
+            headers: {"Authorization": token}
+        })
+            .then(response => {
+                this.setState({
+                    contacts: response.data
+                });
+            })
+            .catch(() => {
+                alert("Error while fetching the user's contacts.");
+            });
+    }
+
     fetchUserChats() {
         const userId = localStorage.getItem("userId");
         const token = localStorage.getItem("token");
@@ -129,6 +159,57 @@ class HomePage extends React.Component {
             .catch(() => {
                 alert("Error while fetching your chats.");
             });
+    }
+
+    handleContactSpecialButtonClick(_event, contactId, deleteMode) {
+        const userId = localStorage.getItem("userId");
+        const token = localStorage.getItem("token");
+        if (this.state.showSearchResultsMode) {
+            // adding a user to the user's contact list
+            axios.post(`api/users/${userId}/contacts/`, {
+                contact_id: contactId
+            }, {
+                headers: {"Authorization": token}
+            })
+                .then(_response => {
+                    alert("The user has been successfully added to your contact list.");
+                    this.fetchUserContacts();
+                })
+                .catch(_error => {
+                    alert("Error while adding the user to your contact list. " +
+                        "You've done it already, haven't you?"
+                    );
+                });
+        } else {
+            if (deleteMode) {
+                // deleting a user from the user's contact list
+                axios.delete(`api/users/${userId}/contacts/${contactId}`, {
+                    headers: {"Authorization": token}
+                })
+                    .then(_response => {
+                        alert("The user has been successfully deleted from your contact list.");
+                        this.fetchUserContacts();
+                    })
+                    .catch(_error => {
+                        alert("Error while deleting the user from your contact list.");
+                    });
+            } else {
+                // adding a user to the selected chat
+                axios.post(`api/chats/${this.state.selectedChat.id}/users/`, {
+                    user_id: contactId
+                }, {
+                    headers: {"Authorization": token}
+                })
+                    .then(_response => {
+                        alert("The user has been successfully added to the selected chat on the right.");
+                    })
+                    .catch(_error => {
+                        alert("Error while adding the user to the selected chat on the right. " +
+                            "You've done it already, haven't you?"
+                        );
+                    });
+            }
+        }
     }
 
     handleChatItemClick(_event, chatId) {
@@ -246,6 +327,16 @@ class HomePage extends React.Component {
             showSearchResultsMode: true
         });
         const token = localStorage.getItem("token");
+
+        axios.get(`api/users/?username=${this.state.searchText}`, {
+            headers: {"Authorization": token}
+        })
+            .then(response => {
+                this.setState({
+                    searchResultUsers: response.data
+                });
+            });
+
         axios.get(`api/chats/?name=${this.state.searchText}`, {
             headers: {"Authorization": token}
         })
@@ -253,7 +344,7 @@ class HomePage extends React.Component {
                 this.setState({
                     searchResultChats: response.data
                 });
-            })
+            });
     }
 
     handleSignOutButtonClick(_event) {
@@ -269,50 +360,27 @@ class HomePage extends React.Component {
             });
     }
 
-    handleEditProfileFormSubmit(_event) {
-        _event.preventDefault();
+    handleEditProfileFormSubmit(event) {
+        event.preventDefault();
         const userId = localStorage.getItem("userId");
         const token = localStorage.getItem("token");
 
-        var old_data = {
-            username: '',
-            firstName: '',
-            lastName: ''
-        };
-        // check current (old) data in db
-        axios.get(`api/users/${userId}`, {
+        axios.patch(`api/users/${userId}`, {
+            username: this.state.username,
+            first_name: this.state.firstName,
+            last_name: this.state.lastName
+        }, {
             headers: {"Authorization": token}
         })
-            .then(response => {
-                old_data.username = response.data["username"];
-                old_data.firstName = response.data["first_name"];
-                old_data.lastName = response.data["last_name"];
-            
+            .then(_response => {
+                alert("Changes were successfully applied.");
             })
-            .catch(() => {
-                alert("Error while fetching the user's detail.");
+            .catch(error => {
+                alert(error.response.data["message"]);
             });
-        // if new data is equal to old, then send blank string
-        const data = {
-            username: this.state.username === old_data.username ? "" : this.state.username,
-            first_name: this.state.firstName === old_data.firstName ? "" : this.state.firstName,
-            last_name: this.state.lastName === old_data.lastName ? "" : this.state.lastName
-        };
-
-        axios.patch(`api/users/${userId}`, data, {
-            headers: {"Authorization": token}
-        })
-        .then(response => {
-            alert("Changes were successfully applied.");
-        })
-        .catch(error => {
-            alert(error.response.data["message"]);
-        });
     }
 
     handleMenuToggleButtonClick(_event) {
-        this.fetchUserDetail();
-
         let toggleBlock = document.getElementById('menu__toggle_block');
         let toggleButton = document.getElementById('menu__toggle_button');
         let toggleButtonInput = document.getElementById('menu__toggle_input');
@@ -402,7 +470,9 @@ class HomePage extends React.Component {
                     <div className="toolbar">
                         <div className="toolbar__wrapper shadow">
                             <input name="bar" className="toolbar__item_input" id="contacts" type="radio"/>
-                            <label className="toolbar__item_label" htmlFor="contacts" onClick={(e) => {e.preventDefault()} }>
+                            <label className="toolbar__item_label" htmlFor="contacts" onClick={(e) => {
+                                e.preventDefault()
+                            }}>
                                 <span>
                                     <Link to={`${this.props.match.url}/contacts`}
                                           className="contacts"
@@ -413,7 +483,9 @@ class HomePage extends React.Component {
 
                             <input name="bar" className="toolbar__item_input" id="chats" type="radio"
                                    defaultChecked={true}/>
-                            <label className="toolbar__item_label" htmlFor="chats" onClick={(e) => {e.preventDefault()} }>
+                            <label className="toolbar__item_label" htmlFor="chats" onClick={(e) => {
+                                e.preventDefault()
+                            }}>
                                 <span>
                                     <Link to={`${this.props.match.url}/chats`}
                                           className="chats"
@@ -427,7 +499,20 @@ class HomePage extends React.Component {
                     </div>
 
                     <div className="tab-item-list-area">
-                        <Route path={`${this.props.match.url}/contacts`} component={ContactList}/>
+                        <Route path={`${this.props.match.url}/contacts`}
+                               render={
+                                   () => <ContactList
+                                       contacts={
+                                           this.state.showSearchResultsMode ?
+                                               this.state.searchResultUsers :
+                                               this.state.contacts
+                                       }
+                                       showSearchResultsMode={this.state.showSearchResultsMode}
+                                       isChatSelected={this.state.isChatSelected}
+                                       handleContactSpecialButtonClick={this.handleContactSpecialButtonClick}
+                                   />
+                               }
+                        />
                         <Route path={`${this.props.match.url}/chats`}
                                render={
                                    () => this.state.showSearchResultsMode ? (

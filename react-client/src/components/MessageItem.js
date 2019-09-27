@@ -1,5 +1,5 @@
 import React from "react";
-import UserIcon from "../user-icon.png";
+import UserIcon from "../true-user-icon.png";
 
 class MessageItem extends React.Component {
     render() {
