@@ -1,7 +1,7 @@
 from .conftest import TOKEN
 
 
-async def test_sign_up(cli, _user):
+async def test_sign_up(cli, user):
     resp = await cli.post('/api/signup',
                           json={"email": "test_data@gmail.com",
                                 "username": "test_data",
@@ -33,7 +33,7 @@ async def test_sign_up(cli, _user):
     # assert resp.status == 201
 
 
-async def test_sign_in(cli, _user):
+async def test_sign_in(cli, user):
     resp = await cli.post('/api/sign-in',
                           json={"email": "test_value@gmail.com",
                                 "password": "test_data"}
@@ -48,7 +48,7 @@ async def test_sign_in(cli, _user):
     assert resp.status == 200
 
 
-async def test_sign_out(cli, _user):
+async def test_sign_out(cli, user):
     resp = await cli.post('/api/users/2/sign-out',
                           headers={'Authorization': TOKEN})
     assert resp.status == 403
