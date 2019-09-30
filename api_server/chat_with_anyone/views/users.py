@@ -469,17 +469,22 @@ class UserChats(web.View, CorsViewMixin):
             User.id == request_user_id
         ).order_by(GroupRoom.last_message_at.desc())
 
-        users = await query.gino.load(User.distinct(User.id).load(add_room=GroupRoom)).all()
+        users = await query.gino.load(
+            User.distinct(User.id).load(add_room=GroupRoom)
+        ).all()
 
         return web.json_response(
             UserChatsResponseSchema().dump(
                 [{
                     "id": room.id,
                     "name": room.name,
-                    "last_message_at": arrow.get(room.last_message_at).humanize(),
+                    "last_message_at": arrow.get(
+                        room.last_message_at
+                    ).humanize(),
                     "last_message_text": room.last_message_text
                 } for room in sorted(
-                    users[0].rooms, key=lambda x: x.last_message_at, reverse=True
+                    users[0].rooms,
+                    key=lambda x: x.last_message_at, reverse=True
                 )],
                 many=True
             ).data)
