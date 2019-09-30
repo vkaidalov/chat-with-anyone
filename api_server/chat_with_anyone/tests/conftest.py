@@ -19,7 +19,7 @@ from ..models.group_membership import GroupMembership
 from ..models.group_message import GroupMessage
 
 BASE_DIR = pathlib.Path(__file__).parents[2]
-DEFAULT_CONFIG_PATH = BASE_DIR / 'config' / 'test_chat_with_anyone'
+DEFAULT_CONFIG_PATH = BASE_DIR / 'config' / 'test_chat_with_anyone.yaml'
 TOKEN = 'EMgHRURmDq8xjXVULw7A7fD1ZvBpR9MKhgSUZ5U8'
 
 
