@@ -32,7 +32,7 @@ def create_config(argv=None):
     )
 
     # ignore unknown options
-    options, unknown = ap.parse_known_args(argv)
+    options, _unknown = ap.parse_known_args(argv)
 
     config = commandline.config_from_options(options, TRAFARET)
 
