@@ -17,7 +17,7 @@ class MessageItem extends React.Component {
                             <p>{this.props["text"]}</p>
                         </div>
                         <div className="message_time">
-                            <span className="user-info__time">{this.props["createdAt"]}</span>
+                            <span className="user-info__time">{new Date(this.props["createdAt"] + "Z").toLocaleString()}</span>
                         </div>
                     </div>
                 </div>

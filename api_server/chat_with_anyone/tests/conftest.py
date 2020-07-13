@@ -44,6 +44,7 @@ def cli(loop, aiohttp_client, create_config):
     config = create_config
     app = web.Application(middlewares=[db])
     app['config'] = config
+    app['websockets'] = {}
     db.init_app(app, config=config["postgres"])
     setup_middlewares(app)
     setup_routes(app)

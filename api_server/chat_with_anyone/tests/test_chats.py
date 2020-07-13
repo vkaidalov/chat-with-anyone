@@ -114,7 +114,7 @@ async def test_delete_user_from_chat(cli, additional_user, additional_chat):
 
 async def test_get_all_messages_from_chat(cli, additional_chat, message):
     response_json = [{'id': 1, 'text': 'test_data', 'username': 'test_data',
-                      'created_at': '01:00 PM'}]
+                      'created_at': '2019-10-02T13:00:00'}]
 
     resp = await cli.get('/api/chats/1/messages/',
                          headers={'Authorization': TOKEN})

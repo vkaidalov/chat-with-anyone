@@ -1,5 +1,3 @@
-import arrow
-
 from aiohttp import web
 from aiohttp_apispec import docs, request_schema, response_schema
 from aiohttp_cors import CorsViewMixin
@@ -311,8 +309,7 @@ class ChatMessages(web.View, CorsViewMixin):
                 [{
                     "id": message.id,
                     "text": message.text,
-                    "created_at":
-                        arrow.get(message.created_at).format('hh:mm A'),
+                    "created_at": message.created_at.isoformat(),
                     "username": username
                 } for message, username in messages],
                 many=True
@@ -353,6 +350,29 @@ class ChatMessages(web.View, CorsViewMixin):
             last_message_at=message.created_at,
             last_message_text=message.text
         ).where(GroupRoom.id == int(chat_id)).gino.status()
+
+        room_members = await GroupMembership.query.where(
+            GroupMembership.room_id == int(chat_id)
+        ).gino.all()
+
+        for room_member in room_members:
+            member_ws: web.WebSocketResponse = self.request.app['websockets']\
+                .get(room_member.user_id)
+
+            if member_ws is None:
+                continue
+
+            await member_ws.send_json({
+                'type': 'message',
+                'data': {
+                    'id': message.id,
+                    'text': message.text,
+                    'created_at': message.created_at.isoformat(),
+                    'room_id': message.room_id,
+                    'user_id': message.user_id,
+                    'username': user.username
+                }
+            })
 
         return web.json_response(status=201)
 

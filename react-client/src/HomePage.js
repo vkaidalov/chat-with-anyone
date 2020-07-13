@@ -81,15 +81,57 @@ class HomePage extends React.Component {
             () => {
                 if (!this.state.showSearchResultsMode) {
                     this.fetchUserChats();
-                    if (this.state.isChatSelected) {
-                        this.fetchSelectedChatMessages(
-                            this.state.selectedChat.id
-                        )
-                    }
                 }
             },
             1000
         );
+
+        const token = localStorage.getItem("token");
+
+        // TODO: get the server address from an env variable
+        const ws = new WebSocket(
+            (window.location.protocol === 'https:' ? 'wss://' : 'ws://')
+            + `localhost:8000/api/ws/${token}`
+        );
+
+        ws.onopen = () => {
+            console.log('ws connected.');
+        };
+
+        ws.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+            switch (data['type']) {
+                case 'message':
+                    const message = data['data'];
+                    if (
+                        this.state.isChatSelected &&
+                        message['room_id'] === this.state.selectedChat.id
+                    ) {
+                        this.setState({
+                            selectedChatMessages: this.state.selectedChatMessages.concat(
+                                message
+                            )
+                        });
+                    }
+                    break;
+                default:
+                    alert("Unrecognised type of message's been received via WebSocket.");
+            }
+        };
+
+        ws.onclose = () => {
+            alert(
+                'WebSocket connection has been suddenly closed. ' +
+                'Try refreshing the page.'
+            );
+        };
+
+        ws.onerror = () => {
+            alert(
+                'An error with WebSocket suddenly occurred. ' +
+                'Try refreshing the page.'
+            );
+        };
     }
 
     componentWillUnmount() {
@@ -251,7 +293,6 @@ class HomePage extends React.Component {
                 this.setState({
                     newMessageText: ""
                 });
-                this.fetchSelectedChatMessages(chatId);
             })
             .catch(_error => {
                 alert("Error while sending your message.");
