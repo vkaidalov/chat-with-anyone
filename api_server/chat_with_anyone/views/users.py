@@ -1,5 +1,3 @@
-import arrow
-
 from aiohttp import web
 from aiohttp_apispec import (
     docs, request_schema, response_schema, marshal_with
@@ -478,9 +476,7 @@ class UserChats(web.View, CorsViewMixin):
                 [{
                     "id": room.id,
                     "name": room.name,
-                    "last_message_at": arrow.get(
-                        room.last_message_at
-                    ).humanize(),
+                    "last_message_at": room.last_message_at.isoformat(),
                     "last_message_text": room.last_message_text
                 } for room in sorted(
                     users[0].rooms,

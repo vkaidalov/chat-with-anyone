@@ -1,5 +1,3 @@
-import arrow
-
 from aiohttp import web
 from aiohttp_apispec import docs, request_schema, response_schema
 from aiohttp_cors import CorsViewMixin
@@ -311,8 +309,7 @@ class ChatMessages(web.View, CorsViewMixin):
                 [{
                     "id": message.id,
                     "text": message.text,
-                    "created_at":
-                        arrow.get(message.created_at).format('hh:mm A'),
+                    "created_at": message.created_at.isoformat(),
                     "username": username
                 } for message, username in messages],
                 many=True

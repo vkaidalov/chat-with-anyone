@@ -10,7 +10,9 @@ class ChatItem extends React.Component {
                         <div className="dialog__meta">
                             <div className="user-info">
                                 <span className="user-info__name">{this.props.name}</span>
-                                <span className="user-info__time">{this.props["lastMessageAt"]}</span>
+                                <span className="user-info__time">
+                                    {new Date(this.props["lastMessageAt"] + "Z").toLocaleString()}
+                                </span>
                             </div>
                             <div className="dialog__meta_message">
                                 <p className="dialog__meta_message_p">

@@ -1,3 +1,5 @@
+from typing import Dict
+
 from aiohttp import web
 from aiohttp_apispec import setup_aiohttp_apispec
 import aiohttp_cors
@@ -33,6 +35,17 @@ cors = aiohttp_cors.setup(app, defaults={
 
 for route in list(app.router.routes()):
     cors.add(route)
+
+app['websockets']: Dict[int, web.WebSocketResponse] = {}
+
+
+async def ws_shutdown(app):
+    for ws in app['websockets'].values():
+        await ws.close()
+    app['websockets'].clear()
+
+
+app.on_shutdown.append(ws_shutdown)
 
 if __name__ == "__main__":
     web.run_app(app)

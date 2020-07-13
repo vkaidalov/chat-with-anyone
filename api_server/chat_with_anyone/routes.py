@@ -1,5 +1,6 @@
 from aiohttp import web
 
+from .views.websocket import websocket_handler
 from .views.auth import sign_in, sign_out, sign_up
 from .views.email_confirmation import email_token_confirmation
 from .views.users import (ContactDetail, ContactList, PasswordChange,
@@ -10,6 +11,8 @@ from .views.chats import (ChatMessageDetails, ChatMessages, Chats,
 
 def setup_routes(app):
     app.add_routes([
+        web.get('/api/ws/{token}', websocket_handler),
+
         web.post('/api/signup', sign_up),
         web.post('/api/sign-in', sign_in),
         web.post(r'/api/users/{user_id:\d+}/sign-out', sign_out),
