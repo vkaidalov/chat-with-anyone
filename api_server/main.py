@@ -1,3 +1,4 @@
+import logging
 from typing import Dict
 
 from aiohttp import web
@@ -48,4 +49,6 @@ async def ws_shutdown(app):
 app.on_shutdown.append(ws_shutdown)
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
+
     web.run_app(app)

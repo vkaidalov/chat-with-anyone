@@ -1,9 +1,12 @@
+import logging
 from datetime import datetime, timedelta
 
 import aiohttp
 from aiohttp import web
 
 from ..models.user import User
+
+log = logging.getLogger(__name__)
 
 
 async def websocket_handler(request):
@@ -34,24 +37,17 @@ async def websocket_handler(request):
     ws = web.WebSocketResponse()
     await ws.prepare(request)
 
+    request.app['websockets'][user.id] = ws
+
     while True:
         msg = await ws.receive()
 
         if msg.type == aiohttp.WSMsgType.TEXT:
-            print('hi doggie')
+            log.info('%s sent a message: %s.', user.username, msg.data)
+        else:
+            break
 
-        break
-
-    # async for msg in ws:
-    #     if msg.type == aiohttp.WSMsgType.TEXT:
-    #         if msg.data == 'close':
-    #             await ws.close()
-    #         else:
-    #             await ws.send_str(msg.data + '/answer')
-    #     elif msg.type == aiohttp.WSMsgType.ERROR:
-    #         print('ws connection closed with exception %s' %
-    #               ws.exception())
-
-    print('websocket connection closed')
+    del request.app['websockets'][user.id]
+    log.info('%s disconnected.', user.username)
 
     return ws
