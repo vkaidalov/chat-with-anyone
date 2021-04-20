@@ -39,7 +39,7 @@ packaging==19.1
 passlib==1.7.1
 pluggy==0.12.0
 psycopg2-binary==2.8.3
-py==1.8.0
+py==1.10.0
 pycares==3.0.0
 pycparser==2.19
 Pygments==2.4.2
